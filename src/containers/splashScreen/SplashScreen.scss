@@ -1,0 +1,42 @@
+@import "../../globalColor";
+
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: $lightBackground1;
+  transition: all 0.3s ease;
+
+  &.dark-mode {
+    background-color: $darkBackground;
+  }
+}
+
+.splash-animation-container {
+  height: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.splash-title-container {
+  font-size: 2rem;
+  margin-top: 20px;
+  color: $textColor;
+  font-family: "Agustina Regular", cursive;
+
+  .dark-mode & {
+    color: $textColorDark;
+  }
+}
+
+.splash-title {
+  font-weight: bold;
+  padding: 0 10px;
+}
+
+.grey-color {
+  color: $subTitle;
+}
