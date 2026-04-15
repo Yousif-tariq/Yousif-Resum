@@ -44,7 +44,7 @@ export default function Blogs() {
       };
       getProfileData();
     }
-  }, []);
+  }, [blogSection]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!blogSection.display) {
     return null;
   }
