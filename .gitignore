@@ -1,27 +1,33 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-/build
-
-
-# misc
-.DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vercel/
+.vercel/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-#user generated content
-public/profile.json
-public/blogs.json
+# Python / Backend
+backend/venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
