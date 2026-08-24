@@ -18,7 +18,7 @@ def get_portfolio_data(request):
     """
     Returns full bilingual dynamic portfolio data structured for React frontend.
     """
-    profile = HeroProfile.objects.filter(is_active=True).first()
+    profile = HeroProfile.objects.filter(is_active=True).first() or HeroProfile.objects.first()
     settings = SiteSettings.objects.first()
     categories = SkillCategory.objects.prefetch_related('skills').all()
     projects = ProjectItem.objects.all()

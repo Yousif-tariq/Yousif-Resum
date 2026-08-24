@@ -31,23 +31,40 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Fetch Live Data from Django Backend
+  // Fetch Live Data from Django Backend with auto-retry and cache-busting
   useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 4;
+
     const fetchDjangoData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/portfolio-data/`);
+        const url = `${API_BASE}/api/portfolio-data/?_t=${Date.now()}`;
+        const res = await fetch(url, {
+          headers: { 'Accept': 'application/json' }
+        });
+        
         if (res.ok) {
           const data = await res.json();
-          if (data && data.ar && data.en) {
+          if (data && data.ar && data.en && isMounted) {
             setLiveData(data);
+            console.log('✔ Connected to live Django Admin API successfully!');
+            return;
           }
         }
       } catch (err) {
-        console.log('Using cached / fallback portfolio data');
+        console.log('Django API connecting...', err.message);
+      }
+
+      // Retry if backend is waking up (Render cold-start)
+      if (isMounted && retryCount < maxRetries && API_BASE) {
+        retryCount++;
+        setTimeout(fetchDjangoData, 3000);
       }
     };
 
     fetchDjangoData();
+    return () => { isMounted = false; };
   }, []);
 
   const currentData = liveData[lang] || fallbackData[lang];
