@@ -70,18 +70,19 @@ export default function ContactRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2rem'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))',
+            gap: '1.5rem',
+            width: '100%'
           }}
         >
           {/* Left / Info Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             
             {/* Terminal Window Status */}
             <div
               className="glass-panel"
               style={{
-                padding: '1.75rem',
+                padding: 'clamp(1.25rem, 3vw, 1.75rem)',
                 border: '1px solid rgba(168, 85, 247, 0.3)'
               }}
             >
@@ -94,7 +95,7 @@ export default function ContactRealm({ data, lang }) {
                 </span>
               </div>
 
-              <div className="font-mono" style={{ fontSize: '0.85rem', lineHeight: 1.8 }}>
+              <div className="font-mono" style={{ fontSize: 'clamp(0.78rem, 1.8vw, 0.85rem)', lineHeight: 1.8, wordBreak: 'break-word' }}>
                 <div style={{ color: 'var(--neon-emerald)', fontWeight: 600 }}>
                   ✔ LINK STATUS: ONLINE // ENCRYPTED (TLS 1.3)
                 </div>
@@ -108,18 +109,18 @@ export default function ContactRealm({ data, lang }) {
             </div>
 
             {/* Direct Coordinates */}
-            <div className="glass-panel" style={{ padding: '1.75rem' }}>
+            <div className="glass-panel" style={{ padding: 'clamp(1.25rem, 3vw, 1.75rem)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Email Item */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-purple)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '200px', flex: '1 1 auto' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-purple)', flexShrink: 0 }}>
                       <Mail size={18} />
                     </div>
-                    <div>
+                    <div style={{ overflow: 'hidden' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'ar' ? 'البريد الرسمي' : 'Direct Email'}</div>
-                      <div className="font-mono" style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 700 }}>{data.email}</div>
+                      <div className="font-mono" style={{ fontSize: 'clamp(0.78rem, 1.8vw, 0.9rem)', color: 'var(--text-primary)', fontWeight: 700, wordBreak: 'break-all' }}>{data.email}</div>
                     </div>
                   </div>
 
@@ -134,8 +135,8 @@ export default function ContactRealm({ data, lang }) {
                 </div>
 
                 {/* Location Item */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-magenta)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-magenta)', flexShrink: 0 }}>
                     <MapPin size={18} />
                   </div>
                   <div>
@@ -153,7 +154,7 @@ export default function ContactRealm({ data, lang }) {
           <div
             className="glass-panel"
             style={{
-              padding: '2rem',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
               border: '1px solid var(--color-border)'
             }}
           >

@@ -55,31 +55,56 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
     return () => cancelAnimationFrame(animFrameRef.current);
   }, []);
 
-  const handleMouseMove = (e) => {
+  const processPosition = (clientX, clientY) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
-    const pctX = Math.max(0, Math.min(100, (clientX / rect.width) * 100));
-    const pctY = Math.max(0, Math.min(100, (clientY / rect.height) * 100));
+    const pctX = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    const pctY = Math.max(0, Math.min(100, (y / rect.height) * 100));
 
     targetPosRef.current = { x: pctX, y: pctY };
     setActiveRegion(detectRegion(pctY, pctX));
 
     // 3D Card Tilt with smooth limits
-    const normX = clientX / rect.width - 0.5;
-    const normY = clientY / rect.height - 0.5;
-    setTilt({ x: normX * 12, y: -normY * 12 });
+    const normX = x / rect.width - 0.5;
+    const normY = y / rect.height - 0.5;
+    setTilt({ x: normX * 10, y: -normY * 10 });
 
     setDwellSharpness(0.85);
-    setLensRadius(160);
+    setLensRadius(rect.width < 320 ? 120 : 160);
 
     clearTimeout(dwellTimerRef.current);
     dwellTimerRef.current = setTimeout(() => {
       setDwellSharpness(1.0);
-      setLensRadius(190);
+      setLensRadius(rect.width < 320 ? 140 : 190);
     }, 60);
+  };
+
+  const handleMouseMove = (e) => {
+    processPosition(e.clientX, e.clientY);
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches && e.touches[0]) {
+      setIsHovered(true);
+      processPosition(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    setIsHovered(true);
+    if (e.touches && e.touches[0]) {
+      processPosition(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    // Keep the reveal for a brief moment before reset on touch
+    setTimeout(() => {
+      handleMouseLeave();
+    }, 1800);
   };
 
   const handleMouseEnter = () => {
@@ -107,7 +132,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', width: '100%', maxWidth: '390px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', width: '100%', maxWidth: 'min(100%, 370px)', margin: '0 auto' }}>
       
       {/* 3D Perspective Card Container */}
       <div
@@ -115,12 +140,16 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           perspective: '1200px',
           width: '100%',
           aspectRatio: '3/4',
           cursor: 'default',
-          position: 'relative'
+          position: 'relative',
+          touchAction: 'none'
         }}
       >
         <div
@@ -278,14 +307,16 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
           borderRadius: '999px',
           border: '1px solid var(--color-border)',
           fontSize: '0.75rem',
-          color: 'var(--text-secondary)'
+          color: 'var(--text-secondary)',
+          textAlign: 'center',
+          maxWidth: '100%'
         }}
       >
-        <Scan size={14} style={{ color: 'var(--neon-purple)' }} />
+        <Scan size={14} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
         <span>
           {lang === 'ar'
-            ? 'حرّك المؤشر فوق أي منطقة (الرأس، الصدر، اليدين) لكشف الجزء المطابق بدقة متناهية'
-            : 'Hover cursor over any section (Head, Chest, Hands) to reveal the matching region'}
+            ? 'حرّك المؤشر أو المس واسحب بإصبعك فوق الصورة لكشف التفاصيل الهولوغرافية بدقة'
+            : 'Hover cursor or drag your finger over the portrait to reveal holographic details'}
         </span>
       </div>
 

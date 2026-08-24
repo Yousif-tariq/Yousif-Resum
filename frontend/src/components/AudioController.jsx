@@ -224,17 +224,17 @@ export default function AudioController() {
       {/* Futuristic Studio Music Player Card */}
       {showMenu && (
         <div
-          className="glass-panel"
+          className="glass-panel audio-player-popup"
           style={{
             position: 'absolute',
             top: 'calc(100% + 10px)',
             [document.documentElement.dir === 'rtl' ? 'left' : 'right']: 0,
-            padding: '18px 22px',
+            padding: '16px 18px',
             borderRadius: '20px',
             border: `1px solid ${currentTrack.color}`,
             boxShadow: 'var(--glow-purple)',
             zIndex: 60,
-            width: '300px',
+            width: 'min(300px, 90vw)',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px'

@@ -383,10 +383,11 @@ body {
 .realm-section {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 7rem 1.75rem;
+  padding: 6.5rem 1.75rem 4rem;
 }
 
 .max-w-7xl {
@@ -406,3 +407,102 @@ body {
   margin-left: auto;
   margin-right: auto;
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN & MOBILE BREAKPOINTS (Tablet, Mobile, Ultra-Small)
+   ========================================================================== */
+
+/* Tablet & Smaller Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .realm-section {
+    padding: 5.5rem 1.25rem 3.5rem;
+  }
+}
+
+/* Mobile Devices & Small Tablets (<= 868px) */
+@media (max-width: 868px) {
+  .desktop-nav-links {
+    display: none !important;
+  }
+  
+  #depth-hud-indicator {
+    display: none !important;
+  }
+
+  #mobileMenuToggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navbar {
+    padding: 0.65rem 1rem !important;
+    padding-top: max(0.65rem, env(safe-area-inset-top)) !important;
+  }
+
+  .realm-section {
+    padding: 5rem 1rem 3rem;
+    min-height: auto;
+  }
+
+  .cyber-btn-primary, .cyber-btn-secondary {
+    padding: 11px 20px;
+    font-size: 0.88rem;
+  }
+}
+
+/* Small SmartPhones (<= 520px) */
+@media (max-width: 520px) {
+  :root {
+    --scanline-opacity: 0.008;
+  }
+
+  body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .navbar {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .realm-section {
+    padding: 4.25rem 0.75rem 2.5rem;
+  }
+
+  .glass-panel {
+    border-radius: 16px;
+    padding: 1.25rem !important;
+  }
+
+  .glass-panel-glow {
+    border-radius: 18px;
+    padding: 1.5rem !important;
+  }
+
+  .cyber-btn-primary, .cyber-btn-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+  }
+
+  .cyber-badge {
+    padding: 4px 10px;
+    font-size: 0.72rem;
+  }
+
+  /* Audio player card responsiveness on small screens */
+  .audio-player-popup {
+    width: min(calc(100vw - 24px), 320px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+  }
+}
+
+/* Fix iOS horizontal overflow */
+body, html, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+

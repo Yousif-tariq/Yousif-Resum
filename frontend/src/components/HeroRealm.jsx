@@ -29,15 +29,15 @@ export default function HeroRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
             alignItems: 'center',
-            gap: '3.5rem',
-            marginBottom: '4rem'
+            gap: 'clamp(2rem, 4vw, 3.5rem)',
+            marginBottom: '3rem'
           }}
         >
           
           {/* Left / Layered Masking & Sliced Reveal Hologram Portrait */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <InteractiveHologramPortrait 
               name={data.name} 
               lang={lang} 
@@ -47,13 +47,13 @@ export default function HeroRealm({ data, lang }) {
           </div>
 
           {/* Right / Hero Typography & Actions */}
-          <div style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
+          <div style={{ textAlign: lang === 'ar' ? 'right' : 'left', width: '100%' }}>
             
             <div
               className="font-mono"
               style={{
                 color: 'var(--neon-purple)',
-                fontSize: '0.95rem',
+                fontSize: 'clamp(0.8rem, 1.8vw, 0.95rem)',
                 fontWeight: 700,
                 letterSpacing: '0.1em',
                 marginBottom: '0.75rem',
@@ -62,18 +62,19 @@ export default function HeroRealm({ data, lang }) {
                 gap: '8px'
               }}
             >
-              <Radio size={16} className="animate-pulse-glow" style={{ color: 'var(--neon-purple)' }} />
+              <Radio size={16} className="animate-pulse-glow" style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
               <span>CORE ARCHITECT // PROTOCOL v2.6</span>
             </div>
 
             <h1
               className="font-cyber text-glow-purple"
               style={{
-                fontSize: 'clamp(2.5rem, 5vw, 4.2rem)',
+                fontSize: 'clamp(2.2rem, 5vw, 4.2rem)',
                 fontWeight: 900,
                 lineHeight: 1.15,
                 marginBottom: '1rem',
-                color: 'var(--text-heading)'
+                color: 'var(--text-heading)',
+                wordBreak: 'break-word'
               }}
             >
               {data.name}
@@ -81,7 +82,7 @@ export default function HeroRealm({ data, lang }) {
 
             <div
               style={{
-                fontSize: 'clamp(1.1rem, 2.2vw, 1.5rem)',
+                fontSize: 'clamp(1rem, 2.2vw, 1.5rem)',
                 fontWeight: 800,
                 color: 'var(--neon-purple)',
                 marginBottom: '1.25rem'
@@ -92,7 +93,7 @@ export default function HeroRealm({ data, lang }) {
 
             <p
               style={{
-                fontSize: 'clamp(0.95rem, 1.6vw, 1.15rem)',
+                fontSize: 'clamp(0.92rem, 1.6vw, 1.15rem)',
                 color: 'var(--text-secondary)',
                 marginBottom: '2rem',
                 lineHeight: 1.75
@@ -102,12 +103,12 @@ export default function HeroRealm({ data, lang }) {
             </p>
 
             {/* Action CTAs */}
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
-              <button onClick={scrollToNext} className="cyber-btn-primary">
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+              <button onClick={scrollToNext} className="cyber-btn-primary" style={{ flex: '1 1 auto' }}>
                 <Zap size={18} />
                 <span>{data.ctaPrimary}</span>
               </button>
-              <button onClick={scrollToContact} className="cyber-btn-secondary">
+              <button onClick={scrollToContact} className="cyber-btn-secondary" style={{ flex: '1 1 auto' }}>
                 <Terminal size={18} />
                 <span>{data.ctaSecondary}</span>
               </button>
@@ -117,22 +118,22 @@ export default function HeroRealm({ data, lang }) {
             <div
               style={{
                 display: 'flex',
-                gap: '16px',
+                gap: '12px 16px',
                 flexWrap: 'wrap',
                 borderTop: '1px solid var(--color-border)',
                 paddingTop: '1.25rem'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                <Cpu size={15} style={{ color: 'var(--neon-purple)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <Cpu size={15} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
                 <span>Distributed Systems</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                <Shield size={15} style={{ color: 'var(--neon-magenta)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <Shield size={15} style={{ color: 'var(--neon-magenta)', flexShrink: 0 }} />
                 <span>High Performance C++/Rust</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                <Activity size={15} style={{ color: 'var(--neon-cyan)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <Activity size={15} style={{ color: 'var(--neon-cyan)', flexShrink: 0 }} />
                 <span>Sub-5ms Latency</span>
               </div>
             </div>
@@ -145,10 +146,11 @@ export default function HeroRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.25rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
+            gap: '1rem',
             maxWidth: '75rem',
-            margin: '0 auto'
+            margin: '0 auto',
+            width: '100%'
           }}
         >
           {data.stats.map((stat, i) => (
@@ -156,7 +158,7 @@ export default function HeroRealm({ data, lang }) {
               key={i}
               className="glass-panel"
               style={{
-                padding: '1.5rem 1rem',
+                padding: '1.25rem 0.85rem',
                 textAlign: 'center',
                 border: '1px solid var(--color-border)'
               }}
@@ -164,7 +166,7 @@ export default function HeroRealm({ data, lang }) {
               <div
                 className="font-cyber text-glow-purple"
                 style={{
-                  fontSize: '2.2rem',
+                  fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)',
                   fontWeight: 900,
                   color: 'var(--neon-purple)',
                   marginBottom: '0.35rem'
@@ -174,7 +176,7 @@ export default function HeroRealm({ data, lang }) {
               </div>
               <div
                 style={{
-                  fontSize: '0.85rem',
+                  fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)',
                   color: 'var(--text-secondary)',
                   fontWeight: 600
                 }}

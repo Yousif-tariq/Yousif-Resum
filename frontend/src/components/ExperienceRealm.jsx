@@ -37,20 +37,20 @@ export default function ExperienceRealm({ data, lang }) {
               position: 'absolute',
               top: '10px',
               bottom: '10px',
-              [lang === 'ar' ? 'right' : 'left']: '20px',
+              [lang === 'ar' ? 'right' : 'left']: 'clamp(10px, 2.5vw, 20px)',
               width: '2px',
               background: 'linear-gradient(to bottom, var(--neon-purple), var(--neon-magenta), transparent)',
               boxShadow: '0 0 14px var(--neon-purple)'
             }}
           />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {data.timeline.map((item, index) => (
               <div
                 key={index}
                 style={{
                   position: 'relative',
-                  [lang === 'ar' ? 'paddingRight' : 'paddingLeft']: '55px'
+                  [lang === 'ar' ? 'paddingRight' : 'paddingLeft']: 'clamp(32px, 5vw, 55px)'
                 }}
               >
                 {/* Glowing Node Dot */}
@@ -58,9 +58,9 @@ export default function ExperienceRealm({ data, lang }) {
                   style={{
                     position: 'absolute',
                     top: '24px',
-                    [lang === 'ar' ? 'right' : 'left']: '11px',
-                    width: '20px',
-                    height: '20px',
+                    [lang === 'ar' ? 'right' : 'left']: 'clamp(2px, 1.5vw, 11px)',
+                    width: '18px',
+                    height: '18px',
                     borderRadius: '50%',
                     background: 'var(--color-void)',
                     border: '3px solid var(--neon-purple)',
@@ -78,16 +78,16 @@ export default function ExperienceRealm({ data, lang }) {
                 <div
                   className="glass-panel"
                   style={{
-                    padding: '1.75rem',
+                    padding: 'clamp(1.25rem, 3vw, 1.75rem)',
                     border: '1px solid var(--color-border)'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '0.75rem' }}>
                     <div>
-                      <h3 className="font-cyber" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      <h3 className="font-cyber" style={{ fontSize: 'clamp(1.05rem, 2.5vw, 1.2rem)', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
                         {item.role}
                       </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--neon-purple)', fontSize: '0.9rem', fontWeight: 700 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--neon-purple)', fontSize: '0.88rem', fontWeight: 700 }}>
                         <Building2 size={15} />
                         <span>{item.company}</span>
                       </div>
@@ -102,7 +102,7 @@ export default function ExperienceRealm({ data, lang }) {
                     </div>
                   </div>
 
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                     {item.desc}
                   </p>
 

@@ -44,9 +44,9 @@ export default function SkillsRealm({ data, lang }) {
           style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '12px',
+            gap: '8px',
             flexWrap: 'wrap',
-            marginBottom: '3rem'
+            marginBottom: '2.5rem'
           }}
         >
           {data.categories.map((cat) => {
@@ -60,19 +60,22 @@ export default function SkillsRealm({ data, lang }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '12px 20px',
-                  borderRadius: '14px',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
                   background: isActive ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(244, 63, 94, 0.25))' : 'var(--color-surface)',
                   border: `1px solid ${isActive ? 'var(--neon-purple)' : 'var(--color-border)'}`,
                   color: isActive ? 'var(--neon-purple)' : 'var(--text-secondary)',
                   fontWeight: 700,
-                  fontSize: '0.92rem',
+                  fontSize: 'clamp(0.82rem, 1.8vw, 0.92rem)',
                   cursor: 'pointer',
                   boxShadow: isActive ? '0 0 25px rgba(168, 85, 247, 0.35)' : 'none',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  flex: '1 1 auto',
+                  maxWidth: '220px',
+                  justifyContent: 'center'
                 }}
               >
-                <Icon size={18} style={{ color: isActive ? 'var(--neon-purple)' : 'var(--text-muted)' }} />
+                <Icon size={16} style={{ color: isActive ? 'var(--neon-purple)' : 'var(--text-muted)', flexShrink: 0 }} />
                 <span>{cat.name}</span>
               </button>
             );
@@ -83,10 +86,11 @@ export default function SkillsRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1.5rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+            gap: '1.25rem',
             maxWidth: '68rem',
-            margin: '0 auto'
+            margin: '0 auto',
+            width: '100%'
           }}
         >
           {currentCategoryData.skills.map((skill, idx) => (

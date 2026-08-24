@@ -84,6 +84,7 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
 
         {/* Real-Time Depth HUD Indicator (Desktop) */}
         <div
+          id="depth-hud-indicator"
           className="font-mono"
           style={{
             display: 'flex',

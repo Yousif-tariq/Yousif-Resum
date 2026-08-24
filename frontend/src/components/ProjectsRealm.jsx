@@ -47,10 +47,11 @@ export default function ProjectsRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '1.75rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))',
+            gap: '1.5rem',
             maxWidth: '75rem',
-            margin: '0 auto'
+            margin: '0 auto',
+            width: '100%'
           }}
         >
           {data.items.map((project) => (
@@ -58,7 +59,7 @@ export default function ProjectsRealm({ data, lang }) {
               key={project.id}
               className="glass-panel"
               style={{
-                padding: '2rem',
+                padding: 'clamp(1.25rem, 3vw, 2rem)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -78,7 +79,7 @@ export default function ProjectsRealm({ data, lang }) {
                 <h3
                   className="font-cyber"
                   style={{
-                    fontSize: '1.3rem',
+                    fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)',
                     fontWeight: 800,
                     marginBottom: '0.85rem',
                     color: 'var(--text-primary)'
@@ -103,8 +104,8 @@ export default function ProjectsRealm({ data, lang }) {
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '8px',
-                    padding: '10px',
+                    gap: '6px',
+                    padding: '8px',
                     borderRadius: '12px',
                     background: 'var(--input-bg)',
                     border: '1px solid var(--color-border)',
@@ -114,10 +115,10 @@ export default function ProjectsRealm({ data, lang }) {
                 >
                   {Object.entries(project.stats).map(([key, val], idx) => (
                     <div key={idx}>
-                      <div className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--neon-purple)' }}>
+                      <div className="font-mono" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)', fontWeight: 800, color: 'var(--neon-purple)' }}>
                         {val}
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
                         {key}
                       </div>
                     </div>
@@ -131,8 +132,8 @@ export default function ProjectsRealm({ data, lang }) {
                       key={idx}
                       className="font-mono"
                       style={{
-                        fontSize: '0.75rem',
-                        padding: '3px 10px',
+                        fontSize: '0.72rem',
+                        padding: '3px 8px',
                         borderRadius: '6px',
                         background: 'rgba(168, 85, 247, 0.1)',
                         border: '1px solid var(--color-border)',
@@ -185,7 +186,7 @@ export default function ProjectsRealm({ data, lang }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1.5rem'
+            padding: '1rem'
           }}
           onClick={() => setSelectedProject(null)}
         >
@@ -194,7 +195,9 @@ export default function ProjectsRealm({ data, lang }) {
             style={{
               maxWidth: '38rem',
               width: '100%',
-              padding: '2.5rem',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 'clamp(1.5rem, 4vw, 2.5rem)',
               border: '1px solid var(--neon-purple)',
               boxShadow: 'var(--glow-purple)',
               position: 'relative'
@@ -215,11 +218,11 @@ export default function ProjectsRealm({ data, lang }) {
               </button>
             </div>
 
-            <h3 className="font-cyber text-glow-purple" style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-heading)' }}>
+            <h3 className="font-cyber text-glow-purple" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-heading)' }}>
               {selectedProject.title}
             </h3>
 
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
               {selectedProject.desc}
             </p>
 
@@ -229,7 +232,7 @@ export default function ProjectsRealm({ data, lang }) {
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {selectedProject.features.map((feat, idx) => (
-                  <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+                  <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 500 }}>
                     <CheckCircle2 size={16} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
                     <span>{feat}</span>
                   </li>

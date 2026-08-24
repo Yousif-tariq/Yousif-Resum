@@ -72,8 +72,9 @@ export default function ThreeCanvas({ scrollProgress = 0, mousePos = { x: 0, y: 
     scene.fog = new THREE.FogExp2(theme === 'light' ? 0xf5f3ff : 0x04020a, 0.021);
 
     // 2. Perspective Camera
+    const isMobile = window.innerWidth < 768;
     const camera = new THREE.PerspectiveCamera(
-      60,
+      isMobile ? 68 : 60,
       window.innerWidth / window.innerHeight,
       0.1,
       1200
@@ -84,11 +85,11 @@ export default function ThreeCanvas({ scrollProgress = 0, mousePos = { x: 0, y: 
     // 3. WebGL Renderer with High Dynamic Range
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: !isMobile || window.devicePixelRatio < 2,
       powerPreference: 'high-performance'
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.4;
     rendererRef.current = renderer;
@@ -328,6 +329,8 @@ export default function ThreeCanvas({ scrollProgress = 0, mousePos = { x: 0, y: 
 
     const handleResize = () => {
       if (!camera || !renderer) return;
+      const isMob = window.innerWidth < 768;
+      camera.fov = isMob ? 68 : 60;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
