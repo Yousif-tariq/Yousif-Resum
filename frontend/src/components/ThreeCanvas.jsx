@@ -7,377 +7,281 @@ export default function ThreeCanvas({ scrollProgress = 0, mousePos = { x: 0, y: 
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
   const stateRef = useRef({
-    particles: null,
-    lightTrails: [],
-    cityBuildings: [],
-    portalRings: [],
-    coreGroup: null,
-    gridFloor: null,
-    gridCeiling: null,
-    lights: []
+    starPoints: null,
+    nebulaPoints: null,
+    dustPoints: null,
+    targetMouse: { x: 0, y: 0 },
+    currentMouse: { x: 0, y: 0 }
   });
 
-  // Handle Theme Switching in 3D Scene
+  // Handle Dynamic Theme Transition
   useEffect(() => {
     if (!sceneRef.current) return;
     const isLight = theme === 'light';
 
-    // Update Fog Color
-    sceneRef.current.fog.color.setHex(isLight ? 0xf5f3ff : 0x04020a);
-
-    // Update Building Colors
-    stateRef.current.cityBuildings.forEach(({ tower, wire }) => {
-      if (isLight) {
-        tower.material.color.setHex(0xe9d5ff);
-        tower.material.emissive.setHex(0xf3e8ff);
-        wire.material.color.setHex(0x9333ea);
-        wire.material.opacity = 0.28;
-      } else {
-        tower.material.color.setHex(0x090518);
-        tower.material.emissive.setHex(0x1a0b2e);
-        wire.material.color.setHex(0xa855f7);
-        wire.material.opacity = 0.22;
-      }
-    });
-
-    // Update Lights
-    if (stateRef.current.lights.length >= 3) {
-      const [pLight, mLight, cLight] = stateRef.current.lights;
-      if (isLight) {
-        pLight.color.setHex(0x9333ea);
-        pLight.intensity = 6;
-        mLight.color.setHex(0xe11d48);
-        mLight.intensity = 5;
-      } else {
-        pLight.color.setHex(0xa855f7);
-        pLight.intensity = 5;
-        mLight.color.setHex(0xf43f5e);
-        mLight.intensity = 4.5;
-      }
+    if (sceneRef.current.fog) {
+      sceneRef.current.fog.color.setHex(isLight ? 0xf8fafc : 0x05030e);
     }
-
-    // Update Grids
-    if (stateRef.current.gridFloor) {
-      stateRef.current.gridFloor.material.opacity = isLight ? 0.25 : 0.38;
+    if (rendererRef.current) {
+      rendererRef.current.setClearColor(isLight ? 0xf8fafc : 0x05030e, 1);
     }
   }, [theme]);
+
+  // Update target mouse on prop change
+  useEffect(() => {
+    stateRef.current.targetMouse.x = mousePos.x || 0;
+    stateRef.current.targetMouse.y = mousePos.y || 0;
+  }, [mousePos]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // 1. Scene & Volumetric Exponential Fog
+    // Helper: Create Soft Circular Glow Particle Texture Procedurally
+    const createGlowTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.2, 'rgba(220, 200, 255, 0.85)');
+      gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.35)');
+      gradient.addColorStop(0.8, 'rgba(6, 182, 212, 0.08)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    };
+
+    const particleTexture = createGlowTexture();
+
+    // 1. Clean Scene & Subtle Fog
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.fog = new THREE.FogExp2(theme === 'light' ? 0xf5f3ff : 0x04020a, 0.021);
+    const isLight = theme === 'light';
+    scene.fog = new THREE.FogExp2(isLight ? 0xf8fafc : 0x05030e, 0.012);
 
-    // 2. Perspective Camera
+    // 2. Camera Setup
     const isMobile = window.innerWidth < 768;
     const camera = new THREE.PerspectiveCamera(
-      isMobile ? 68 : 60,
+      isMobile ? 60 : 50,
       window.innerWidth / window.innerHeight,
       0.1,
-      1200
+      1000
     );
-    camera.position.set(0, 0, 18);
+    camera.position.set(0, 0, 45);
     cameraRef.current = camera;
 
-    // 3. WebGL Renderer with High Dynamic Range
+    // 3. WebGL Renderer with High Precision
     const renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
-      antialias: !isMobile || window.devicePixelRatio < 2,
       powerPreference: 'high-performance'
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
     rendererRef.current = renderer;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(isLight ? 0xf8fafc : 0x05030e, 1);
 
+    container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // 4. Dynamic Lighting System
-    const ambientLight = new THREE.AmbientLight(0x130a26, 2.2);
-    scene.add(ambientLight);
+    // 4. Layer 1: Ethereal Floating Nebula Starfield (Luminous Points)
+    const starCount = isMobile ? 350 : 750;
+    const starGeo = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    const starScales = new Float32Array(starCount);
+    const starSpeeds = new Float32Array(starCount);
 
-    const purplePointLight = new THREE.PointLight(0xa855f7, 5, 90);
-    purplePointLight.position.set(10, 8, 12);
-    scene.add(purplePointLight);
+    const palette = [
+      new THREE.Color(0xa855f7), // Neon Purple
+      new THREE.Color(0xc084fc), // Violet Light
+      new THREE.Color(0x38bdf8), // Sky Blue
+      new THREE.Color(0x818cf8), // Indigo
+      new THREE.Color(0xffffff)  // Pure Starlight
+    ];
 
-    const magentaPointLight = new THREE.PointLight(0xf43f5e, 4.5, 90);
-    magentaPointLight.position.set(-10, -8, 8);
-    scene.add(magentaPointLight);
+    for (let i = 0; i < starCount; i++) {
+      const i3 = i * 3;
+      // Cylindrical / Spherical distribution
+      const radius = 15 + Math.random() * 45;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 80;
 
-    const cyanPointLight = new THREE.PointLight(0x00f0ff, 2.5, 60);
-    cyanPointLight.position.set(0, 12, 5);
-    scene.add(cyanPointLight);
+      starPositions[i3] = Math.cos(theta) * radius;
+      starPositions[i3 + 1] = y;
+      starPositions[i3 + 2] = Math.sin(theta) * radius - 10;
 
-    stateRef.current.lights = [purplePointLight, magentaPointLight, cyanPointLight];
+      const col = palette[Math.floor(Math.random() * palette.length)];
+      starColors[i3] = col.r;
+      starColors[i3 + 1] = col.g;
+      starColors[i3 + 2] = col.b;
 
-    // 5. Cyberpunk City Towers & Monoliths
-    const buildingsGroup = new THREE.Group();
-    const cityBuildings = [];
-    const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
-
-    const buildingMatWire = new THREE.MeshBasicMaterial({
-      color: 0xa855f7,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.22
-    });
-
-    const buildingMatSolid = new THREE.MeshStandardMaterial({
-      color: 0x090518,
-      roughness: 0.2,
-      metalness: 0.95,
-      emissive: 0x1a0b2e,
-      emissiveIntensity: 0.55
-    });
-
-    for (let i = 0; i < 48; i++) {
-      const isLeft = i % 2 === 0;
-      const xPos = isLeft ? -16 - Math.random() * 14 : 16 + Math.random() * 14;
-      const zPos = 20 - i * 4.5;
-      const height = 12 + Math.random() * 32;
-      const width = 3 + Math.random() * 5;
-      const depth = 3 + Math.random() * 6;
-
-      const towerMesh = new THREE.Mesh(buildingGeo, buildingMatSolid);
-      towerMesh.scale.set(width, height, depth);
-      towerMesh.position.set(xPos, height / 2 - 12, zPos);
-
-      const wireMesh = new THREE.Mesh(buildingGeo, buildingMatWire);
-      wireMesh.scale.set(width * 1.01, height * 1.01, depth * 1.01);
-      wireMesh.position.copy(towerMesh.position);
-
-      buildingsGroup.add(towerMesh);
-      buildingsGroup.add(wireMesh);
-      cityBuildings.push({ tower: towerMesh, wire: wireMesh, initY: towerMesh.position.y });
-    }
-    scene.add(buildingsGroup);
-    stateRef.current.cityBuildings = cityBuildings;
-
-    // 6. Neon Light Trails / Data Highways
-    const trailCount = 18;
-    const lightTrails = [];
-
-    for (let i = 0; i < trailCount; i++) {
-      const angle = (i / trailCount) * Math.PI * 2;
-      const radius = 9 + (i % 3) * 3;
-      const colorVal = i % 3 === 0 ? 0xa855f7 : i % 3 === 1 ? 0xf43f5e : 0xc084fc;
-
-      const points = [];
-      for (let z = 25; z >= -120; z -= 15) {
-        const spiralX = Math.cos(angle + z * 0.03) * radius;
-        const spiralY = Math.sin(angle + z * 0.03) * radius * 0.7;
-        points.push(new THREE.Vector3(spiralX, spiralY, z));
-      }
-
-      const curve = new THREE.CatmullRomCurve3(points);
-      const tubeGeo = new THREE.TubeGeometry(curve, 70, 0.06, 8, false);
-      const tubeMat = new THREE.MeshBasicMaterial({
-        color: colorVal,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending
-      });
-
-      const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-      scene.add(tubeMesh);
-      lightTrails.push(tubeMesh);
-    }
-    stateRef.current.lightTrails = lightTrails;
-
-    // 7. Volumetric Starfield & Cyber Dust (2500 Particles)
-    const particleCount = 2500;
-    const pGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-
-    const c1 = new THREE.Color(0xa855f7);
-    const c2 = new THREE.Color(0xf43f5e);
-    const c3 = new THREE.Color(0xc084fc);
-    const c4 = new THREE.Color(0x00f0ff);
-
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 55;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 55;
-      positions[i * 3 + 2] = Math.random() * 140 - 110;
-
-      const rVal = Math.random();
-      const col = rVal < 0.45 ? c1 : rVal < 0.75 ? c2 : rVal < 0.9 ? c3 : c4;
-      colors[i * 3] = col.r;
-      colors[i * 3 + 1] = col.g;
-      colors[i * 3 + 2] = col.b;
+      starScales[i] = 1.0 + Math.random() * 2.5;
+      starSpeeds[i] = 0.2 + Math.random() * 0.8;
     }
 
-    pGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    pGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
 
-    const pMaterial = new THREE.PointsMaterial({
-      size: 0.18,
+    const starMat = new THREE.PointsMaterial({
+      size: isMobile ? 2.4 : 3.2,
+      map: particleTexture || undefined,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending
+      opacity: isLight ? 0.45 : 0.75,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
+      depthWrite: false
     });
 
-    const particles = new THREE.Points(pGeometry, pMaterial);
-    scene.add(particles);
-    stateRef.current.particles = particles;
+    const starPoints = new THREE.Points(starGeo, starMat);
+    scene.add(starPoints);
+    stateRef.current.starPoints = starPoints;
 
-    // 8. Dimensional Portal Gateway Rings
-    const portalRings = [];
-    const ringGeo = new THREE.TorusGeometry(4.8, 0.05, 16, 120);
+    // 5. Layer 2: Gentle Ambient Cosmic Wave Mesh (Ultra-fine minimalistic undulating grid)
+    const waveCount = isMobile ? 120 : 250;
+    const waveGeo = new THREE.BufferGeometry();
+    const wavePositions = new Float32Array(waveCount * 3);
+    const waveColors = new Float32Array(waveCount * 3);
 
-    for (let i = 0; i < 10; i++) {
-      const isPurple = i % 2 === 0;
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: isPurple ? 0xa855f7 : 0xf43f5e,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.45,
-        blending: THREE.AdditiveBlending
-      });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.z = 15 - i * 14;
-      scene.add(ring);
-      portalRings.push(ring);
+    for (let i = 0; i < waveCount; i++) {
+      const i3 = i * 3;
+      const x = (Math.random() - 0.5) * 60;
+      const z = (Math.random() - 0.5) * 50 - 5;
+      const y = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3 - 8;
+
+      wavePositions[i3] = x;
+      wavePositions[i3 + 1] = y;
+      wavePositions[i3 + 2] = z;
+
+      waveColors[i3] = 0.65;
+      waveColors[i3 + 1] = 0.35;
+      waveColors[i3 + 2] = 0.98;
     }
-    stateRef.current.portalRings = portalRings;
 
-    // 9. Central Quantum Core Entity
-    const coreGroup = new THREE.Group();
-    const icoGeo = new THREE.IcosahedronGeometry(2.0, 2);
-    const icoMat = new THREE.MeshStandardMaterial({
-      color: 0x05020c,
-      emissive: 0xa855f7,
-      emissiveIntensity: 0.6,
-      roughness: 0.1,
-      metalness: 0.95,
-      wireframe: true
-    });
-    const icoMesh = new THREE.Mesh(icoGeo, icoMat);
-    coreGroup.add(icoMesh);
+    waveGeo.setAttribute('position', new THREE.BufferAttribute(wavePositions, 3));
+    waveGeo.setAttribute('color', new THREE.BufferAttribute(waveColors, 3));
 
-    const gyroMat = new THREE.MeshBasicMaterial({
-      color: 0xf43f5e,
-      wireframe: true,
+    const waveMat = new THREE.PointsMaterial({
+      size: isMobile ? 1.6 : 2.2,
+      map: particleTexture || undefined,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.4
+      opacity: isLight ? 0.3 : 0.55,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
+      depthWrite: false
     });
-    const gyroRing1 = new THREE.Mesh(new THREE.TorusGeometry(3.0, 0.03, 16, 80), gyroMat);
-    const gyroRing2 = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.03, 16, 80), gyroMat);
-    gyroRing1.rotation.x = Math.PI / 3;
-    gyroRing2.rotation.y = Math.PI / 4;
-    coreGroup.add(gyroRing1);
-    coreGroup.add(gyroRing2);
 
-    coreGroup.position.set(0, 0, 5);
-    scene.add(coreGroup);
-    stateRef.current.coreGroup = coreGroup;
+    const wavePoints = new THREE.Points(waveGeo, waveMat);
+    scene.add(wavePoints);
+    stateRef.current.dustPoints = wavePoints;
 
-    // 10. Infinite Cyber Grid Floor & Ceiling
-    const gridFloor = new THREE.GridHelper(120, 60, 0xa855f7, 0x2e1065);
-    gridFloor.position.y = -9;
-    gridFloor.material.transparent = true;
-    gridFloor.material.opacity = 0.38;
-    scene.add(gridFloor);
-    stateRef.current.gridFloor = gridFloor;
-
-    const gridCeiling = new THREE.GridHelper(120, 60, 0xf43f5e, 0x2e1065);
-    gridCeiling.position.y = 14;
-    gridCeiling.material.transparent = true;
-    gridCeiling.material.opacity = 0.22;
-    scene.add(gridCeiling);
-    stateRef.current.gridCeiling = gridCeiling;
-
-    // Animation Loop
+    // 6. Smooth Animation Loop
     let animationFrameId;
-    const clock = new THREE.Clock();
+    let clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       const elapsedTime = clock.getElapsedTime();
 
-      if (coreGroup) {
-        coreGroup.rotation.x = elapsedTime * 0.25;
-        coreGroup.rotation.y = elapsedTime * 0.35;
-        gyroRing1.rotation.z = elapsedTime * 0.4;
-        gyroRing2.rotation.x = -elapsedTime * 0.3;
+      // Smooth mouse interpolation (Lerp)
+      stateRef.current.currentMouse.x += (stateRef.current.targetMouse.x - stateRef.current.currentMouse.x) * 0.04;
+      stateRef.current.currentMouse.y += (stateRef.current.targetMouse.y - stateRef.current.currentMouse.y) * 0.04;
+
+      const mx = stateRef.current.currentMouse.x;
+      const my = stateRef.current.currentMouse.y;
+
+      // Subtle slow rotation of stardust
+      if (starPoints) {
+        starPoints.rotation.y = elapsedTime * 0.02 + mx * 0.08;
+        starPoints.rotation.x = Math.sin(elapsedTime * 0.015) * 0.03 - my * 0.05;
+
+        // Gentle floating particle breathing
+        const pos = starGeo.attributes.position.array;
+        for (let i = 0; i < starCount; i++) {
+          const i3 = i * 3;
+          pos[i3 + 1] += Math.sin(elapsedTime * starSpeeds[i] + i) * 0.012;
+        }
+        starGeo.attributes.position.needsUpdate = true;
       }
 
-      portalRings.forEach((ring, idx) => {
-        ring.rotation.z = elapsedTime * (0.12 + idx * 0.04) * (idx % 2 === 0 ? 1 : -1);
-      });
-
-      if (particles) {
-        particles.rotation.z = elapsedTime * 0.015;
+      // Gentle undulating cosmic wave
+      if (wavePoints) {
+        wavePoints.rotation.y = -elapsedTime * 0.015 - mx * 0.05;
+        const wpos = waveGeo.attributes.position.array;
+        for (let i = 0; i < waveCount; i++) {
+          const i3 = i * 3;
+          wpos[i3 + 1] = Math.sin(elapsedTime * 0.8 + wpos[i3] * 0.15) * 2.2 - 6;
+        }
+        waveGeo.attributes.position.needsUpdate = true;
       }
 
-      if (gridFloor) {
-        gridFloor.position.z = (elapsedTime * 3.5) % 2.0 - 9;
-      }
-      if (gridCeiling) {
-        gridCeiling.position.z = (elapsedTime * 3.5) % 2.0 - 9;
-      }
+      // Camera responds elegantly to scroll & parallax
+      const targetCamZ = 45 - scrollProgress * 18;
+      const targetCamY = -scrollProgress * 25 + my * 2.5;
+      const targetCamX = mx * 3.5;
+
+      camera.position.x += (targetCamX - camera.position.x) * 0.05;
+      camera.position.y += (targetCamY - camera.position.y) * 0.05;
+      camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+
+      camera.lookAt(0, -scrollProgress * 20, 0);
 
       renderer.render(scene, camera);
     };
 
     animate();
 
+    // 7. Resize Handler
     const handleResize = () => {
-      if (!camera || !renderer) return;
-      const isMob = window.innerWidth < 768;
-      camera.fov = isMob ? 68 : 60;
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const mobile = width < 768;
+
+      camera.fov = mobile ? 60 : 50;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
-      if (renderer.domElement && container.contains(renderer.domElement)) {
+      window.removeEventListener('resize', handleResize);
+      if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      starGeo.dispose();
+      starMat.dispose();
+      waveGeo.dispose();
+      waveMat.dispose();
+      if (particleTexture) particleTexture.dispose();
       renderer.dispose();
     };
   }, []);
 
-  // Update 3D Camera Depth & Parallax
-  useEffect(() => {
-    if (!cameraRef.current) return;
-
-    const targetZ = 18 - scrollProgress * 115;
-    cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.12;
-
-    const targetX = mousePos.x * 3.5;
-    const targetY = -mousePos.y * 2.8;
-
-    cameraRef.current.position.x += (targetX - cameraRef.current.position.x) * 0.06;
-    cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.06;
-
-    cameraRef.current.lookAt(targetX * 0.35, targetY * 0.35, cameraRef.current.position.z - 15);
-
-    if (stateRef.current.coreGroup) {
-      const core = stateRef.current.coreGroup;
-      const distFromCore = cameraRef.current.position.z - core.position.z;
-      if (distFromCore < 5 && distFromCore > -12) {
-        const expand = Math.max(1, 1 + (5 - distFromCore) * 0.85);
-        core.scale.set(expand, expand, expand);
-      }
-    }
-  }, [scrollProgress, mousePos]);
-
   return (
     <div
       ref={containerRef}
-      className="webgl-canvas-container"
-      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        transition: 'background 0.5s ease'
+      }}
     />
   );
 }

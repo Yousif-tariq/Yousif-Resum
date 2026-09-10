@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Lenis from 'lenis';
 import { portfolioData as fallbackData } from './data/portfolioData';
 import ThreeCanvas from './components/ThreeCanvas';
@@ -8,11 +8,13 @@ import SkillsRealm from './components/SkillsRealm';
 import ProjectsRealm from './components/ProjectsRealm';
 import ExperienceRealm from './components/ExperienceRealm';
 import ContactRealm from './components/ContactRealm';
-import { Terminal, Shield, Sparkles, ChevronUp, Mail } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { API_BASE } from './config/api';
 
 export default function App() {
-  const [lang, setLang] = useState('ar');
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('preferred_lang') || 'en';
+  });
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('quantum_theme') || 'dark';
   });
@@ -27,18 +29,69 @@ export default function App() {
     localStorage.setItem('quantum_theme', theme);
   }, [theme]);
 
+  // Sync language preference
+  useEffect(() => {
+    localStorage.setItem('preferred_lang', lang);
+  }, [lang]);
+
+  // Seamless Background Audio Autoplay (No UI buttons, runs on open or first interaction)
+  useEffect(() => {
+    const audio = new Audio('/audio/run_mus.mp3');
+    audio.loop = true;
+    audio.volume = 0.65;
+
+    let isStarted = false;
+    const startAudio = () => {
+      if (isStarted) return;
+      audio.play().then(() => {
+        isStarted = true;
+        cleanupListeners();
+      }).catch(() => {
+        // Autoplay policy prevented immediate playback; waiting for first user interaction
+      });
+    };
+
+    const handleUserGesture = () => {
+      startAudio();
+    };
+
+    const cleanupListeners = () => {
+      window.removeEventListener('click', handleUserGesture);
+      window.removeEventListener('touchstart', handleUserGesture);
+      window.removeEventListener('pointerdown', handleUserGesture);
+      window.removeEventListener('scroll', handleUserGesture);
+      window.removeEventListener('keydown', handleUserGesture);
+    };
+
+    // 1. Try immediate playback on app launch
+    startAudio();
+
+    // 2. Fallback on first gesture if blocked by browser policy
+    window.addEventListener('click', handleUserGesture, { passive: true });
+    window.addEventListener('touchstart', handleUserGesture, { passive: true });
+    window.addEventListener('pointerdown', handleUserGesture, { passive: true });
+    window.addEventListener('scroll', handleUserGesture, { passive: true });
+    window.addEventListener('keydown', handleUserGesture, { passive: true });
+
+    return () => {
+      cleanupListeners();
+      audio.pause();
+    };
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Fetch Live Data from Django Backend with auto-retry and cache-busting
+  // Fetch Live Data from Django Backend with auto-retry
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
-    const maxRetries = 4;
+    const maxRetries = 3;
 
     const fetchDjangoData = async () => {
       try {
+        if (!API_BASE) return;
         const url = `${API_BASE}/api/portfolio-data/?_t=${Date.now()}`;
         const res = await fetch(url, {
           headers: { 'Accept': 'application/json' }
@@ -48,18 +101,14 @@ export default function App() {
           const data = await res.json();
           if (data && data.ar && data.en && isMounted) {
             setLiveData(data);
-            console.log('✔ Connected to live Django Admin API successfully!');
             return;
           }
         }
-      } catch (err) {
-        console.log('Django API connecting...', err.message);
-      }
+      } catch (err) {}
 
-      // Retry if backend is waking up (Render cold-start)
       if (isMounted && retryCount < maxRetries && API_BASE) {
         retryCount++;
-        setTimeout(fetchDjangoData, 3000);
+        setTimeout(fetchDjangoData, 3500);
       }
     };
 
@@ -69,63 +118,82 @@ export default function App() {
 
   const currentData = liveData[lang] || fallbackData[lang];
 
-  // Initialize Lenis Smooth Scroll & Scroll Depth Listener
+  // Initialize Smooth Scrolling (Configured for ultra responsiveness on touch & desktop)
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    
     const lenis = new Lenis({
-      duration: 1.2,
+      duration: isMobile ? 0.7 : 1.1,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true
+      smoothWheel: true,
+      syncTouch: false,
+      touchMultiplier: 1.0
     });
 
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
-    requestAnimationFrame(raf);
+    const animId = requestAnimationFrame(raf);
 
+    let tick = false;
     const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const progress = Math.min(1, Math.max(0, window.scrollY / totalHeight));
-        setScrollProgress(progress);
-      }
-
-      const sections = ['hero', 'skills', 'projects', 'experience', 'contact'];
-      const scrollMiddle = window.scrollY + window.innerHeight * 0.4;
-
-      for (const id of sections) {
-        const el = document.getElementById(id);
-        if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollMiddle >= top && scrollMiddle < top + height) {
-            setActiveRealm(id);
-            break;
+      if (!tick) {
+        requestAnimationFrame(() => {
+          const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+          if (totalHeight > 0) {
+            const progress = Math.min(1, Math.max(0, window.scrollY / totalHeight));
+            setScrollProgress(progress);
           }
-        }
+
+          const sections = ['hero', 'skills', 'projects', 'experience', 'contact'];
+          const scrollMiddle = window.scrollY + window.innerHeight * 0.35;
+
+          for (const id of sections) {
+            const el = document.getElementById(id);
+            if (el) {
+              const top = el.offsetTop;
+              const height = el.offsetHeight;
+              if (scrollMiddle >= top && scrollMiddle < top + height) {
+                setActiveRealm(id);
+                break;
+              }
+            }
+          }
+          tick = false;
+        });
+        tick = true;
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animId);
       lenis.destroy();
     };
   }, []);
 
-  // Mouse Parallax Listener
+  // Throttled Mouse Parallax Listener
   useEffect(() => {
+    let mouseTick = false;
     const handleMouseMove = (e) => {
-      const x = (e.clientX / window.innerWidth) * 2 - 1;
-      const y = (e.clientY / window.innerHeight) * 2 - 1;
-      setMousePos({ x, y });
+      if (!mouseTick) {
+        requestAnimationFrame(() => {
+          const x = (e.clientX / window.innerWidth) * 2 - 1;
+          const y = (e.clientY / window.innerHeight) * 2 - 1;
+          setMousePos({ x, y });
+          mouseTick = false;
+        });
+        mouseTick = true;
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Dynamic document direction when language changes
+  // Direction sync
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
@@ -136,17 +204,15 @@ export default function App() {
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', background: 'var(--color-void)' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', minHeight: '100dvh', background: 'var(--color-void)' }}>
       
-      {/* 1. Real-time 3D WebGL Canvas Layer (Three.js Depth Engine) */}
+      {/* 1. Real-time Minimalist Luxury 3D Starfield & Particle Nebula Layer */}
       <ThreeCanvas scrollProgress={scrollProgress} mousePos={mousePos} theme={theme} />
 
-      {/* 2. Visual Atmospheric Overlays (Vignette, Grid, Noise) */}
+      {/* 2. Pure Atmospheric Depth Vignette */}
       <div className="depth-overlay" />
-      <div className="scanline-grid" />
-      <div className="cyber-noise" />
 
-      {/* 3. Navigation Bar & Depth Meter */}
+      {/* 3. Navigation Bar */}
       <Navbar
         lang={lang}
         setLang={setLang}
@@ -165,45 +231,45 @@ export default function App() {
         <ContactRealm data={currentData.contact} lang={lang} />
       </main>
 
-      {/* 5. Futuristic Footer */}
+      {/* 5. Clean Cyber Footer */}
       <footer
         style={{
           position: 'relative',
           zIndex: 20,
-          borderTop: '1px solid rgba(168, 85, 247, 0.18)',
-          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(8, 4, 20, 0.95)',
-          padding: '3rem 1.5rem',
+          borderTop: '1px solid rgba(168, 85, 247, 0.2)',
+          background: theme === 'light' ? 'rgba(255, 255, 255, 0.96)' : 'rgba(5, 2, 12, 0.96)',
+          padding: 'clamp(2rem, 4vw, 3rem) 1.5rem 2.5rem',
           textAlign: 'center'
         }}
       >
-        <div style={{ maxWidth: '64rem', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+        <div style={{ maxWidth: '64rem', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--neon-purple)', boxShadow: '0 0 10px var(--neon-purple)' }} />
-            <span className="font-cyber" style={{ fontSize: '1.1rem', fontWeight: 800 }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--neon-purple)', boxShadow: '0 0 10px var(--neon-purple)' }} />
+            <span className="font-cyber" style={{ fontSize: 'clamp(0.95rem, 2.2vw, 1.15rem)', fontWeight: 800, color: 'var(--text-primary)' }}>
               {lang === 'ar' ? 'يوسف طارق • مهندس أنظمة وبرمجيات' : 'YOUSIF TARIQ • SYSTEMS & SOFTWARE ENGINEER'}
             </span>
           </div>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.8rem, 1.6vw, 0.88rem)', maxWidth: '36rem', lineHeight: 1.6 }}>
             {lang === 'ar'
-              ? 'تم ربط كامل الموقع بلوحة تحكم Django Admin الحية مع محرك Three.js ثلاثي الأبعاد'
-              : 'Powered by dynamic Django Admin CMS & Three.js 3D Depth Engine'}
+              ? 'معمارية شبكات وأنظمة برمجية سحابية عالية الأداء مع محرك أعصاب سيبراني ثلاثي الأبعاد'
+              : 'High-performance distributed systems architecture & 3D Cyber Neural Matrix engine'}
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '0.25rem' }}>
             <button
               onClick={scrollToTop}
               className="cyber-btn-secondary"
-              style={{ padding: '8px 16px', fontSize: '0.82rem', borderRadius: '10px' }}
+              style={{ padding: '7px 16px', fontSize: '0.82rem', borderRadius: '10px' }}
             >
-              <ChevronUp size={16} />
+              <ChevronUp size={15} />
               <span>{lang === 'ar' ? 'العودة لقمة المشهد 🚀' : 'Return to Singularity'}</span>
             </button>
           </div>
 
-          <div className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '1rem' }}>
-            © 2026 YOUSIF TARIQ // ALL RIGHTS RESERVED • DJANGO CMS CORE
+          <div className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            © 2026 YOUSIF TARIQ // ALL SYSTEMS OPERATIONAL
           </div>
 
         </div>

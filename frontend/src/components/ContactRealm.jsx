@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Terminal, Mail, MapPin, CheckCircle2, Copy, Check, Sparkles, Shield } from 'lucide-react';
+import { Send, Terminal, Mail, MapPin, CheckCircle2, Copy, Check, Sparkles, Shield, Radio, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_BASE } from '../config/api';
 
@@ -13,16 +13,18 @@ export default function ContactRealm({ data, lang }) {
     setStatus('sending');
 
     try {
-      const response = await fetch(`${API_BASE}/api/contact/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      }).catch(() => null);
+      if (API_BASE) {
+        await fetch(`${API_BASE}/api/contact/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        }).catch(() => null);
+      }
 
       confetti({
-        particleCount: 80,
-        spread: 100,
-        colors: ['#a855f7', '#f43f5e', '#c084fc', '#00f0ff'],
+        particleCount: 70,
+        spread: 90,
+        colors: ['#a855f7', '#f43f5e', '#c084fc', '#06b6d4'],
         origin: { y: 0.6 }
       });
 
@@ -46,15 +48,15 @@ export default function ContactRealm({ data, lang }) {
       <div className="max-w-5xl" style={{ width: '100%' }}>
         
         {/* Realm Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-          <div className="cyber-badge" style={{ marginBottom: '1rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem, 5vw, 3.5rem)' }}>
+          <div className="cyber-badge" style={{ marginBottom: '0.85rem' }}>
             <Send size={15} />
             <span>REALM 05 // SIGNAL TRANSMISSION</span>
           </div>
           <h2
             className="font-cyber text-glow-purple"
             style={{
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              fontSize: 'clamp(1.9rem, 4.5vw, 3.2rem)',
               fontWeight: 800,
               marginBottom: '0.75rem',
               color: 'var(--text-heading)'
@@ -62,7 +64,7 @@ export default function ContactRealm({ data, lang }) {
           >
             {data.title}
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '36rem', margin: '0 auto' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', maxWidth: '38rem', margin: '0 auto', lineHeight: 1.7 }}>
             {data.subtitle}
           </p>
         </div>
@@ -70,8 +72,8 @@ export default function ContactRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))',
-            gap: '1.5rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 310px), 1fr))',
+            gap: 'clamp(1.2rem, 3vw, 1.75rem)',
             width: '100%'
           }}
         >
@@ -114,20 +116,21 @@ export default function ContactRealm({ data, lang }) {
                 
                 {/* Email Item */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '200px', flex: '1 1 auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '180px', flex: '1 1 auto' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-purple)', flexShrink: 0 }}>
                       <Mail size={18} />
                     </div>
                     <div style={{ overflow: 'hidden' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'ar' ? 'البريد الرسمي' : 'Direct Email'}</div>
-                      <div className="font-mono" style={{ fontSize: 'clamp(0.78rem, 1.8vw, 0.9rem)', color: 'var(--text-primary)', fontWeight: 700, wordBreak: 'break-all' }}>{data.email}</div>
+                      <div className="font-mono" style={{ fontSize: 'clamp(0.78rem, 1.8vw, 0.88rem)', color: 'var(--text-primary)', fontWeight: 700, wordBreak: 'break-all' }}>{data.email}</div>
                     </div>
                   </div>
 
                   <button
                     onClick={copyEmail}
                     className="cyber-btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '8px' }}
+                    style={{ padding: '6px 12px', fontSize: '0.78rem', borderRadius: '8px', minHeight: '34px' }}
+                    title="نسخ البريد الإلكتروني"
                   >
                     {copied ? <Check size={14} style={{ color: 'var(--neon-emerald)' }} /> : <Copy size={14} />}
                     <span>{copied ? (lang === 'ar' ? 'تم النسخ' : 'Copied') : (lang === 'ar' ? 'نسخ' : 'Copy')}</span>
@@ -169,7 +172,7 @@ export default function ContactRealm({ data, lang }) {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={lang === 'ar' ? 'المهندس / الشريك' : 'John Doe'}
+                  placeholder={lang === 'ar' ? 'الاسم أو الشركة' : 'Your name / company'}
                   className="cyber-input"
                 />
               </div>
@@ -206,8 +209,8 @@ export default function ContactRealm({ data, lang }) {
               {status === 'success' && (
                 <div
                   style={{
-                    padding: '12px',
-                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
                     background: 'rgba(16, 185, 129, 0.15)',
                     border: '1px solid var(--neon-emerald)',
                     color: 'var(--neon-emerald)',

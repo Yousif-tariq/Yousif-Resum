@@ -231,3 +231,20 @@ def dispatch_contact_message(request):
         "message": "تم استلام رسالتك بنجاح وتسجيلها في قاعدة بيانات الإدارة (Django Admin)",
         "id": msg_obj.id
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_root_status(request):
+    """
+    Root landing response with system status and direct navigation links.
+    """
+    return Response({
+        "status": "online",
+        "system": "Yousif Tariq Portfolio API Core // v2.6",
+        "endpoints": {
+            "admin_panel": request.build_absolute_uri('/admin/'),
+            "portfolio_data": request.build_absolute_uri('/api/portfolio-data/'),
+            "contact_dispatch": request.build_absolute_uri('/api/contact/')
+        }
+    })

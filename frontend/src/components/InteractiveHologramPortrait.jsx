@@ -1,38 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
 import profileImg from '../assets/profile.jpeg';
 import profileAltImg from '../assets/profile-alt.jpg';
-import { Target, Scan, Sparkles, Activity, Layers } from 'lucide-react';
+import { Target, Scan, Activity, Zap } from 'lucide-react';
 
 export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, alterEgoPhoto }) {
   const [isHovered, setIsHovered] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 }); // in percentages
-  const [lensRadius, setLensRadius] = useState(0); // in pixels
-  const [dwellSharpness, setDwellSharpness] = useState(0); // 0 to 1
+  const [cursorPos, setCursorPos] = useState({ x: 50, y: 38 });
   const [activeRegion, setActiveRegion] = useState('STANDBY');
+  const [autoScan, setAutoScan] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   
   const displayPrimaryImg = primaryPhoto || profileImg;
   const displayAlterEgoImg = alterEgoPhoto || profileAltImg;
   
   const cardRef = useRef(null);
-  const dwellTimerRef = useRef(null);
   const animFrameRef = useRef(null);
-  const targetPosRef = useRef({ x: 50, y: 50 });
-  const currentPosRef = useRef({ x: 50, y: 50 });
+  const targetPosRef = useRef({ x: 50, y: 38 });
+  const currentPosRef = useRef({ x: 50, y: 38 });
+  const autoScanAngleRef = useRef(0);
 
-  // Region classification based on Y coordinate
-  const detectRegion = (yPct, xPct) => {
-    if (yPct < 32) {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      setIsTouchDevice(hasTouch);
+    }
+  }, []);
+
+  const detectRegion = (yPct) => {
+    if (yPct < 35) {
       return lang === 'ar' ? 'منطقة الرأس • CRANIAL_CORE' : 'HEAD / CRANIAL REGION';
-    } else if (yPct < 60) {
-      return lang === 'ar' ? 'منطقة الصدر والكتف • THORAX & EMBLEM' : 'CHEST & SYMBIOTE EMBLEM';
+    } else if (yPct < 62) {
+      return lang === 'ar' ? 'منطقة الصدر • THORAX_MATRIX' : 'CHEST & EMBLEM';
     } else if (yPct < 85) {
-      return lang === 'ar' ? 'منطقة اليدين والجهاز • NEURAL_HANDS' : 'HANDS & DEVICE INTERFACE';
+      return lang === 'ar' ? 'منطقة اليدين • NEURAL_INTERFACE' : 'HANDS & DEVICE INTERFACE';
     } else {
-      return lang === 'ar' ? 'المحيط والبيئة • BIOMETRIC_LOWER' : 'LOWER BIOMETRIC FIELD';
+      return lang === 'ar' ? 'المحيط • BIOMETRIC_LOWER' : 'BIOMETRIC FIELD';
     }
   };
 
+  // Run interpolation only when active or in autoScan mode
   useEffect(() => {
     let lastTime = performance.now();
 
@@ -40,20 +47,35 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
       const delta = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      currentPosRef.current.x += (targetPosRef.current.x - currentPosRef.current.x) * 0.24;
-      currentPosRef.current.y += (targetPosRef.current.y - currentPosRef.current.y) * 0.24;
+      if (autoScan && !isHovered) {
+        autoScanAngleRef.current += delta * 1.6;
+        const autoX = 50 + Math.sin(autoScanAngleRef.current) * 26;
+        const autoY = 44 + Math.cos(autoScanAngleRef.current * 0.8) * 30;
+        targetPosRef.current = { x: autoX, y: autoY };
+        setActiveRegion(detectRegion(autoY));
+      }
+
+      currentPosRef.current.x += (targetPosRef.current.x - currentPosRef.current.x) * 0.25;
+      currentPosRef.current.y += (targetPosRef.current.y - currentPosRef.current.y) * 0.25;
 
       setCursorPos({
-        x: currentPosRef.current.x,
-        y: currentPosRef.current.y
+        x: Math.round(currentPosRef.current.x * 10) / 10,
+        y: Math.round(currentPosRef.current.y * 10) / 10
       });
 
-      animFrameRef.current = requestAnimationFrame(updateLoop);
+      if (isHovered || autoScan) {
+        animFrameRef.current = requestAnimationFrame(updateLoop);
+      }
     };
 
-    animFrameRef.current = requestAnimationFrame(updateLoop);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, []);
+    if (isHovered || autoScan) {
+      animFrameRef.current = requestAnimationFrame(updateLoop);
+    }
+
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [autoScan, isHovered, lang]);
 
   const processPosition = (clientX, clientY) => {
     if (!cardRef.current) return;
@@ -65,21 +87,11 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
     const pctY = Math.max(0, Math.min(100, (y / rect.height) * 100));
 
     targetPosRef.current = { x: pctX, y: pctY };
-    setActiveRegion(detectRegion(pctY, pctX));
+    setActiveRegion(detectRegion(pctY));
 
-    // 3D Card Tilt with smooth limits
     const normX = x / rect.width - 0.5;
     const normY = y / rect.height - 0.5;
-    setTilt({ x: normX * 10, y: -normY * 10 });
-
-    setDwellSharpness(0.85);
-    setLensRadius(rect.width < 320 ? 120 : 160);
-
-    clearTimeout(dwellTimerRef.current);
-    dwellTimerRef.current = setTimeout(() => {
-      setDwellSharpness(1.0);
-      setLensRadius(rect.width < 320 ? 140 : 190);
-    }, 60);
+    setTilt({ x: normX * 8, y: -normY * 8 });
   };
 
   const handleMouseMove = (e) => {
@@ -101,40 +113,40 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
   };
 
   const handleTouchEnd = () => {
-    // Keep the reveal for a brief moment before reset on touch
     setTimeout(() => {
-      handleMouseLeave();
+      setIsHovered(false);
+      setTilt({ x: 0, y: 0 });
     }, 1800);
   };
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    setLensRadius(160);
-    setDwellSharpness(0.85);
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
     setTilt({ x: 0, y: 0 });
-    setLensRadius(0);
-    setDwellSharpness(0);
-    setActiveRegion('STANDBY');
-    clearTimeout(dwellTimerRef.current);
+    if (!autoScan) {
+      setActiveRegion('STANDBY');
+    }
   };
 
+  const isRevealing = isHovered || autoScan;
+  const lensRadius = isTouchDevice ? 125 : 150;
+
   const maskStyle = {
-    WebkitMaskImage: isHovered
-      ? `radial-gradient(circle ${lensRadius}px at ${cursorPos.x}% ${cursorPos.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.4) 80%, transparent 100%)`
+    WebkitMaskImage: isRevealing
+      ? `radial-gradient(circle ${lensRadius}px at ${cursorPos.x}% ${cursorPos.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.3) 80%, transparent 100%)`
       : 'none',
-    maskImage: isHovered
-      ? `radial-gradient(circle ${lensRadius}px at ${cursorPos.x}% ${cursorPos.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.4) 80%, transparent 100%)`
+    maskImage: isRevealing
+      ? `radial-gradient(circle ${lensRadius}px at ${cursorPos.x}% ${cursorPos.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.3) 80%, transparent 100%)`
       : 'none'
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', width: '100%', maxWidth: 'min(100%, 370px)', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '100%', maxWidth: 'min(100%, 370px)', margin: '0 auto' }}>
       
-      {/* 3D Perspective Card Container */}
+      {/* 3D Card Container */}
       <div
         ref={cardRef}
         onMouseMove={handleMouseMove}
@@ -144,10 +156,10 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          perspective: '1200px',
+          perspective: '1000px',
           width: '100%',
           aspectRatio: '3/4',
-          cursor: 'default',
+          cursor: 'crosshair',
           position: 'relative',
           touchAction: 'none'
         }}
@@ -158,40 +170,39 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             width: '100%',
             height: '100%',
             borderRadius: '24px',
-            padding: '8px',
-            background: isHovered
-              ? 'linear-gradient(135deg, var(--neon-purple), var(--neon-magenta), var(--color-surface))'
-              : 'linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(244, 63, 94, 0.35), var(--color-surface))',
-            boxShadow: isHovered
-              ? '0 0 35px rgba(168, 85, 247, 0.45), 0 25px 60px rgba(0, 0, 0, 0.85)'
-              : 'var(--glow-purple), 0 20px 50px rgba(0,0,0,0.7)',
-            transform: `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg) scale(${isHovered ? 1.02 : 1})`,
-            transition: 'transform 0.15s ease-out, box-shadow 0.4s ease',
-            transformStyle: 'preserve-3d'
+            padding: '6px',
+            background: isRevealing
+              ? 'linear-gradient(135deg, var(--neon-purple), var(--neon-cyan), var(--color-surface))'
+              : 'linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(6, 182, 212, 0.3), var(--color-surface))',
+            boxShadow: isRevealing
+              ? '0 0 35px rgba(168, 85, 247, 0.45), 0 20px 50px rgba(0, 0, 0, 0.85)'
+              : '0 0 25px rgba(168, 85, 247, 0.25), 0 15px 40px rgba(0, 0, 0, 0.65)',
+            transform: `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)`,
+            transition: 'transform 0.15s ease-out, box-shadow 0.3s ease'
           }}
         >
-          {/* Inner Viewport Window */}
+          {/* Viewport Window */}
           <div
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: '20px',
+              borderRadius: '18px',
               overflow: 'hidden',
               position: 'relative',
               background: '#04020a'
             }}
           >
             
-            {/* LAYER 1: Base Primary Photo (Developer Mode) */}
+            {/* Base Primary Photo */}
             <img
               src={displayPrimaryImg}
-              alt="Yousif Tariq - Developer Base Layer"
+              alt="Yousif Tariq - Primary Engineer"
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
                 objectPosition: 'center 20%',
-                filter: 'contrast(1.1) brightness(1.02)',
+                filter: 'contrast(1.08) brightness(1.02)',
                 display: 'block',
                 position: 'absolute',
                 top: 0,
@@ -200,59 +211,101 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
               }}
             />
 
-            {/* LAYER 2: LOCALIZED REGION MASKED LAYER (Alter-Ego Hero Mode) */}
+            {/* Localized Alter-Ego Layer */}
             <div
               style={{
                 position: 'absolute',
                 inset: 0,
                 ...maskStyle,
                 pointerEvents: 'none',
-                transition: 'opacity 0.15s ease',
-                opacity: isHovered ? 1 : 0
+                opacity: isRevealing ? 1 : 0,
+                transition: 'opacity 0.15s ease'
               }}
             >
               <img
                 src={displayAlterEgoImg}
-                alt="Yousif Tariq - Alter Ego Localized Region"
+                alt="Yousif Tariq - Cyber Alter Ego"
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
                   objectPosition: 'center 25%',
-                  filter: `contrast(1.22) brightness(${1.0 + dwellSharpness * 0.12}) saturate(1.28) blur(${Math.max(0, (1 - dwellSharpness) * 0.8)}px)`,
-                  transition: 'filter 0.12s ease'
+                  filter: 'contrast(1.22) brightness(1.08) saturate(1.25)'
                 }}
               />
 
-              {/* Glowing Edge Gradient */}
+              {/* Holographic Cyan Reticle */}
               <div
                 style={{
                   position: 'absolute',
-                  inset: 0,
-                  background: 'radial-gradient(circle at center, transparent 45%, rgba(168, 85, 247, 0.2) 80%, rgba(244, 63, 94, 0.3) 100%)',
-                  mixBlendMode: 'screen'
+                  top: `${cursorPos.y}%`,
+                  left: `${cursorPos.x}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  border: '1.5px dashed var(--neon-cyan)',
+                  boxShadow: '0 0 16px rgba(6, 182, 212, 0.6)',
+                  pointerEvents: 'none',
+                  animation: 'spinReticle 6s linear infinite'
                 }}
               />
             </div>
 
-            {/* Tech Corner Brackets */}
-            <div style={{ position: 'absolute', top: '12px', left: '12px', borderTop: '2px solid var(--neon-purple)', borderLeft: '2px solid var(--neon-purple)', width: '16px', height: '16px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '12px', right: '12px', borderTop: '2px solid var(--neon-purple)', borderRight: '2px solid var(--neon-purple)', width: '16px', height: '16px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '12px', left: '12px', borderBottom: '2px solid var(--neon-magenta)', borderLeft: '2px solid var(--neon-magenta)', width: '16px', height: '16px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '12px', right: '12px', borderBottom: '2px solid var(--neon-magenta)', borderRight: '2px solid var(--neon-magenta)', width: '16px', height: '16px', pointerEvents: 'none' }} />
-
-            {/* Bottom HUD Info Bar */}
+            {/* Scan Laser Line */}
             <div
               style={{
                 position: 'absolute',
-                bottom: '16px',
-                left: '16px',
-                right: '16px',
-                backdropFilter: 'blur(14px)',
-                background: 'rgba(8, 4, 20, 0.88)',
+                left: 0,
+                right: 0,
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, var(--neon-purple), var(--neon-cyan), transparent)',
+                top: `${cursorPos.y}%`,
+                opacity: isRevealing ? 0.8 : 0.15,
+                pointerEvents: 'none'
+              }}
+            />
+
+            {/* Corner Brackets */}
+            <div style={{ position: 'absolute', top: '10px', left: '10px', borderTop: '2px solid var(--neon-purple)', borderLeft: '2px solid var(--neon-purple)', width: '14px', height: '14px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '10px', right: '10px', borderTop: '2px solid var(--neon-purple)', borderRight: '2px solid var(--neon-purple)', width: '14px', height: '14px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '10px', left: '10px', borderBottom: '2px solid var(--neon-cyan)', borderLeft: '2px solid var(--neon-cyan)', width: '14px', height: '14px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '10px', right: '10px', borderBottom: '2px solid var(--neon-cyan)', borderRight: '2px solid var(--neon-cyan)', width: '14px', height: '14px', pointerEvents: 'none' }} />
+
+            {/* Top Right Region Badge */}
+            <div
+              className="font-mono"
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                background: 'rgba(8, 4, 20, 0.85)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+                borderRadius: '8px',
+                padding: '2px 8px',
+                fontSize: '0.64rem',
+                color: 'var(--neon-violet-light)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                pointerEvents: 'none'
+              }}
+            >
+              <Activity size={11} className="animate-pulse-glow" style={{ color: 'var(--neon-cyan)' }} />
+              <span>{isRevealing ? activeRegion.split('•')[0] : 'NEURAL v2.6'}</span>
+            </div>
+
+            {/* Bottom Status Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '12px',
+                left: '12px',
+                right: '12px',
+                background: 'rgba(7, 3, 16, 0.9)',
                 border: '1px solid rgba(168, 85, 247, 0.35)',
-                borderRadius: '12px',
-                padding: '10px 14px',
+                borderRadius: '10px',
+                padding: '8px 12px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -260,34 +313,26 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
               }}
             >
               <div>
-                <div className="font-cyber" style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff' }}>
+                <div className="font-cyber" style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>
                   {name}
                 </div>
-                <div className="font-mono" style={{ fontSize: '0.7rem', color: isHovered ? 'var(--neon-violet-light)' : '#a1a1aa' }}>
-                  {isHovered ? `COORDS: [X:${Math.round(cursorPos.x)}% Y:${Math.round(cursorPos.y)}%]` : 'HOVER TO REVEAL REGION'}
+                <div className="font-mono" style={{ fontSize: '0.66rem', color: isRevealing ? 'var(--neon-violet-light)' : '#9ca3af' }}>
+                  {isRevealing ? `[X:${Math.round(cursorPos.x)}% Y:${Math.round(cursorPos.y)}%]` : (isTouchDevice ? 'TOUCH TO SCAN' : 'HOVER TO REVEAL')}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <div
                   style={{
-                    width: '8px',
-                    height: '8px',
+                    width: '7px',
+                    height: '7px',
                     borderRadius: '50%',
-                    background: isHovered ? 'var(--neon-purple)' : 'var(--neon-emerald)',
-                    boxShadow: isHovered ? '0 0 10px var(--neon-purple)' : '0 0 8px var(--neon-emerald)',
-                    animation: 'cyber-pulse 1.2s infinite'
+                    background: isRevealing ? 'var(--neon-cyan)' : 'var(--neon-emerald)',
+                    boxShadow: isRevealing ? '0 0 8px var(--neon-cyan)' : '0 0 8px var(--neon-emerald)'
                   }}
                 />
-                <span
-                  className="font-mono"
-                  style={{
-                    fontSize: '0.68rem',
-                    color: isHovered ? 'var(--neon-violet-light)' : 'var(--neon-emerald)',
-                    fontWeight: 700
-                  }}
-                >
-                  {isHovered ? 'ACTIVE SCAN ⚡' : 'READY 🟢'}
+                <span className="font-mono" style={{ fontSize: '0.64rem', color: isRevealing ? 'var(--neon-cyan)' : 'var(--neon-emerald)', fontWeight: 700 }}>
+                  {isRevealing ? 'SCAN ⚡' : 'ONLINE'}
                 </span>
               </div>
             </div>
@@ -296,34 +341,55 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
         </div>
       </div>
 
-      {/* Polished Glass Guide Note */}
-      <div
-        className="glass-panel"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 16px',
-          borderRadius: '999px',
-          border: '1px solid var(--color-border)',
-          fontSize: '0.75rem',
-          color: 'var(--text-secondary)',
-          textAlign: 'center',
-          maxWidth: '100%'
-        }}
-      >
-        <Scan size={14} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
-        <span>
-          {lang === 'ar'
-            ? 'حرّك المؤشر أو المس واسحب بإصبعك فوق الصورة لكشف التفاصيل الهولوغرافية بدقة'
-            : 'Hover cursor or drag your finger over the portrait to reveal holographic details'}
-        </span>
+      {/* Control Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
+        <button
+          onClick={() => setAutoScan(prev => !prev)}
+          className="cyber-btn-secondary"
+          style={{
+            padding: '6px 14px',
+            borderRadius: '999px',
+            fontSize: '0.78rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: autoScan ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(6, 182, 212, 0.3))' : 'var(--color-surface)',
+            borderColor: autoScan ? 'var(--neon-cyan)' : 'var(--color-border)',
+            color: autoScan ? 'var(--neon-cyan)' : 'var(--text-secondary)',
+            minHeight: '34px'
+          }}
+        >
+          <Zap size={13} style={{ color: autoScan ? 'var(--neon-cyan)' : 'var(--neon-purple)' }} />
+          <span>{autoScan ? (lang === 'ar' ? 'إيقاف المسح' : 'Stop Scan') : (lang === 'ar' ? 'مسح آلي ⚡' : 'Auto Scan ⚡')}</span>
+        </button>
+
+        <div
+          className="glass-panel"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '6px 12px',
+            borderRadius: '999px',
+            border: '1px solid var(--color-border)',
+            fontSize: '0.73rem',
+            color: 'var(--text-secondary)',
+            minHeight: '34px'
+          }}
+        >
+          <Scan size={12} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
+          <span>
+            {lang === 'ar'
+              ? (isTouchDevice ? 'اسحب إصبعك للكشف' : 'حرّك المؤشر للكشف')
+              : (isTouchDevice ? 'Drag to reveal' : 'Hover to reveal')}
+          </span>
+        </div>
       </div>
 
       <style>{`
         @keyframes spinReticle {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
         }
       `}</style>
     </div>
