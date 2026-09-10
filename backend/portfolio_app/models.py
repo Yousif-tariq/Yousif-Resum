@@ -161,3 +161,31 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class VisitorLog(models.Model):
+    """
+    Records detailed device, browser, and network visits to the application.
+    """
+    ip_address = models.GenericIPAddressField(verbose_name="عنوان الـ IP", null=True, blank=True)
+    device_id = models.CharField(max_length=120, db_index=True, verbose_name="معرف الجهاز الفريد")
+    user_agent = models.TextField(blank=True, verbose_name="بيانات المتصفح والنظام (User Agent)")
+    device_type = models.CharField(max_length=50, default="Desktop", verbose_name="نوع الجهاز (Mobile/Desktop/Tablet)")
+    browser = models.CharField(max_length=100, default="Unknown", verbose_name="المتصفح")
+    os = models.CharField(max_length=100, default="Unknown", verbose_name="نظام التشغيل")
+    language = models.CharField(max_length=10, default="en", verbose_name="لغة التصفح")
+    screen_resolution = models.CharField(max_length=50, blank=True, verbose_name="دقة الشاشة")
+    referrer = models.URLField(max_length=500, blank=True, null=True, verbose_name="مصدر الزيارة (Referrer)")
+    path_visited = models.CharField(max_length=200, default="/", verbose_name="الصفحة / المسار")
+    country = models.CharField(max_length=100, blank=True, null=True, verbose_name="الدولة")
+    city = models.CharField(max_length=100, blank=True, null=True, verbose_name="المدينة")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="تاريخ ووقت الزيارة")
+
+    class Meta:
+        verbose_name = "سجل زيارة جهاز"
+        verbose_name_plural = "سجلات زيارات التطبيق (Analytics)"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.device_type} ({self.os}/{self.browser}) - IP: {self.ip_address or 'Unknown'} @ {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+

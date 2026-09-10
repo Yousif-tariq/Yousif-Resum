@@ -7,7 +7,8 @@ from .models import (
     ProjectItem,
     ExperienceItem,
     ContactMessage,
-    SiteSettings
+    SiteSettings,
+    VisitorLog
 )
 
 admin.site.site_header = "لوحة تحكم منصة المهندس يوسف طارق | Quantum CMS"
@@ -137,3 +138,39 @@ class ContactMessageAdmin(admin.ModelAdmin):
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
     list_display = ['title', 'email', 'location_ar', 'status_ar']
+
+
+@admin.register(VisitorLog)
+class VisitorLogAdmin(admin.ModelAdmin):
+    list_display = ['device_badge', 'ip_address', 'browser', 'os', 'language', 'screen_resolution', 'country', 'created_at']
+    list_filter = ['device_type', 'os', 'browser', 'language', 'created_at']
+    search_fields = ['ip_address', 'device_id', 'user_agent', 'referrer']
+    readonly_fields = [
+        'ip_address', 'device_id', 'device_type', 'browser', 'os',
+        'language', 'screen_resolution', 'referrer', 'path_visited',
+        'country', 'city', 'user_agent', 'created_at'
+    ]
+    date_hierarchy = 'created_at'
+
+    def device_badge(self, obj):
+        color_map = {
+            'Mobile': '#10b981',
+            'Tablet': '#f59e0b',
+            'Desktop': '#38bdf8'
+        }
+        icon_map = {
+            'Mobile': '📱',
+            'Tablet': '📟',
+            'Desktop': '💻'
+        }
+        color = color_map.get(obj.device_type, '#a855f7')
+        icon = icon_map.get(obj.device_type, '🌐')
+        return format_html(
+            '<span style="background: {}20; color: {}; border: 1px solid {}80; padding: 3px 10px; border-radius: 999px; font-weight: bold; font-size: 0.8rem;">{} {}</span>',
+            color, color, color, icon, obj.device_type
+        )
+    device_badge.short_description = "الجهاز"
+
+    def has_add_permission(self, request):
+        return False
+

@@ -233,6 +233,142 @@ def dispatch_contact_message(request):
     }, status=status.HTTP_201_CREATED)
 
 
+def get_client_ip(request):
+    """
+    Extracts the client's real public IP address from standard and cloud proxy headers.
+    """
+    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+    if cf_ip:
+        return cf_ip.strip()
+
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+
+    return request.META.get('REMOTE_ADDR', '')
+
+
+def parse_device_info(ua_string):
+    """
+    Parses user-agent string into categorized Device Type, OS, and Browser.
+    """
+    ua = (ua_string or '').lower()
+    
+    # 1. Device Type
+    device_type = "Desktop"
+    if 'tablet' in ua or 'ipad' in ua or ('android' in ua and 'mobile' not in ua):
+        device_type = "Tablet"
+    elif 'mobile' in ua or 'iphone' in ua or 'ipod' in ua or 'android' in ua:
+        device_type = "Mobile"
+
+    # 2. Operating System
+    os_name = "Other"
+    if 'windows' in ua:
+        os_name = "Windows"
+    elif 'iphone' in ua or 'ipad' in ua or 'ipod' in ua:
+        os_name = "iOS"
+    elif 'macintosh' in ua or 'mac os' in ua:
+        os_name = "macOS"
+    elif 'android' in ua:
+        os_name = "Android"
+    elif 'linux' in ua:
+        os_name = "Linux"
+
+    # 3. Browser
+    browser_name = "Other"
+    if 'edg/' in ua or 'edge' in ua:
+        browser_name = "Microsoft Edge"
+    elif 'chrome' in ua and 'safari' in ua and 'crios' not in ua and 'edg' not in ua:
+        browser_name = "Chrome"
+    elif 'crios' in ua:
+        browser_name = "Chrome (iOS)"
+    elif 'fxios' in ua or 'firefox' in ua:
+        browser_name = "Firefox"
+    elif 'safari' in ua and 'chrome' not in ua:
+        browser_name = "Safari"
+    elif 'opera' in ua or 'opr/' in ua:
+        browser_name = "Opera"
+
+    return device_type, os_name, browser_name
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def track_visit(request):
+    """
+    Endpoint to asynchronously log visitor traffic, device fingerprints, and client metadata.
+    """
+    from .models import VisitorLog
+
+    data = request.data or {}
+    device_id = str(data.get('device_id', '')).strip()
+    if not device_id:
+        device_id = f"anon-{request.session.session_key or 'guest'}"
+
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    ip_address = get_client_ip(request)
+    device_type, os_name, browser_name = parse_device_info(user_agent)
+
+    country = request.META.get('HTTP_CF_IPCOUNTRY') or request.META.get('HTTP_X_VERCEL_IP_COUNTRY') or ''
+    city = request.META.get('HTTP_X_VERCEL_IP_CITY') or ''
+
+    log = VisitorLog.objects.create(
+        ip_address=ip_address or None,
+        device_id=device_id[:120],
+        user_agent=user_agent,
+        device_type=device_type,
+        browser=browser_name,
+        os=os_name,
+        language=str(data.get('language', 'en'))[:10],
+        screen_resolution=str(data.get('screen_resolution', ''))[:50],
+        referrer=str(data.get('referrer', ''))[:500] if data.get('referrer') else None,
+        path_visited=str(data.get('path_visited', '/'))[:200],
+        country=country[:100] if country else None,
+        city=city[:100] if city else None
+    )
+
+    return Response({
+        "success": True,
+        "status": "visit_recorded",
+        "log_id": log.id,
+        "device_type": device_type,
+        "os": os_name,
+        "browser": browser_name
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_analytics_stats(request):
+    """
+    Returns aggregated analytics summary for visitor traffic.
+    """
+    from .models import VisitorLog
+    from django.db.models import Count
+
+    total_hits = VisitorLog.objects.count()
+    unique_devices = VisitorLog.objects.values('device_id').distinct().count()
+
+    device_counts = dict(VisitorLog.objects.values('device_type').annotate(count=Count('id')).values_list('device_type', 'count'))
+    os_counts = dict(VisitorLog.objects.values('os').annotate(count=Count('id')).values_list('os', 'count'))
+    browser_counts = dict(VisitorLog.objects.values('browser').annotate(count=Count('id')).values_list('browser', 'count'))
+    language_counts = dict(VisitorLog.objects.values('language').annotate(count=Count('id')).values_list('language', 'count'))
+
+    recent_logs = VisitorLog.objects.order_by('-created_at')[:10].values(
+        'id', 'device_type', 'os', 'browser', 'language', 'screen_resolution', 'ip_address', 'country', 'created_at'
+    )
+
+    return Response({
+        "total_hits": total_hits,
+        "unique_devices": unique_devices,
+        "device_breakdown": device_counts,
+        "os_breakdown": os_counts,
+        "browser_breakdown": browser_counts,
+        "language_breakdown": language_counts,
+        "recent_visits": list(recent_logs)
+    })
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_root_status(request):
@@ -245,6 +381,9 @@ def api_root_status(request):
         "endpoints": {
             "admin_panel": request.build_absolute_uri('/admin/'),
             "portfolio_data": request.build_absolute_uri('/api/portfolio-data/'),
-            "contact_dispatch": request.build_absolute_uri('/api/contact/')
+            "contact_dispatch": request.build_absolute_uri('/api/contact/'),
+            "track_visit": request.build_absolute_uri('/api/track-visit/'),
+            "analytics_stats": request.build_absolute_uri('/api/analytics-stats/')
         }
     })
+

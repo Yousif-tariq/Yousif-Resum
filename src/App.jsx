@@ -10,6 +10,7 @@ import ExperienceRealm from './components/ExperienceRealm';
 import ContactRealm from './components/ContactRealm';
 import { ChevronUp } from 'lucide-react';
 import { API_BASE } from './config/api';
+import { recordVisit } from './services/tracker';
 
 export default function App() {
   const [lang, setLang] = useState(() => {
@@ -22,6 +23,11 @@ export default function App() {
   const [activeRealm, setActiveRealm] = useState('hero');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [liveData, setLiveData] = useState(fallbackData);
+
+  // Asynchronously record device visit in backend
+  useEffect(() => {
+    recordVisit(lang, window.location.pathname || '/');
+  }, []);
 
   // Sync theme with HTML root & localStorage
   useEffect(() => {
