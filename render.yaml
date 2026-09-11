@@ -2,8 +2,8 @@ services:
   - type: web
     name: yousif-portfolio-backend
     runtime: python
+    rootDir: backend
     plan: free
-    region: frankfurt # or singapore / oregon / ohio
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
@@ -16,12 +16,12 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: TURSO_DATABASE_URL
-        sync: false # Set in Render Dashboard from Turso
+        sync: false
       - key: TURSO_AUTH_TOKEN
-        sync: false # Set in Render Dashboard from Turso
+        sync: false
       - key: DJANGO_SUPERUSER_USERNAME
         value: "admin"
       - key: DJANGO_SUPERUSER_PASSWORD
-        sync: false # Set in Render Dashboard
+        sync: false
       - key: DJANGO_SUPERUSER_EMAIL
         value: "yousif.tariq@engineer.dev"

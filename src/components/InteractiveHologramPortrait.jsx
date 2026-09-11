@@ -55,8 +55,8 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
         setActiveRegion(detectRegion(autoY));
       }
 
-      currentPosRef.current.x += (targetPosRef.current.x - currentPosRef.current.x) * 0.25;
-      currentPosRef.current.y += (targetPosRef.current.y - currentPosRef.current.y) * 0.25;
+      currentPosRef.current.x += (targetPosRef.current.x - currentPosRef.current.x) * 0.28;
+      currentPosRef.current.y += (targetPosRef.current.y - currentPosRef.current.y) * 0.28;
 
       setCursorPos({
         x: Math.round(currentPosRef.current.x * 10) / 10,
@@ -91,7 +91,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
 
     const normX = x / rect.width - 0.5;
     const normY = y / rect.height - 0.5;
-    setTilt({ x: normX * 8, y: -normY * 8 });
+    setTilt({ x: normX * 6, y: -normY * 6 });
   };
 
   const handleMouseMove = (e) => {
@@ -116,7 +116,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
     setTimeout(() => {
       setIsHovered(false);
       setTilt({ x: 0, y: 0 });
-    }, 1800);
+    }, 2000);
   };
 
   const handleMouseEnter = () => {
@@ -132,7 +132,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
   };
 
   const isRevealing = isHovered || autoScan;
-  const lensRadius = isTouchDevice ? 125 : 150;
+  const lensRadius = isTouchDevice ? 115 : 145;
 
   const maskStyle = {
     WebkitMaskImage: isRevealing
@@ -144,7 +144,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '100%', maxWidth: 'min(100%, 370px)', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '100%', maxWidth: 'min(100%, 360px)', margin: '0 auto' }}>
       
       {/* 3D Card Container */}
       <div
@@ -169,14 +169,14 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             position: 'relative',
             width: '100%',
             height: '100%',
-            borderRadius: '24px',
-            padding: '6px',
+            borderRadius: '22px',
+            padding: '5px',
             background: isRevealing
               ? 'linear-gradient(135deg, var(--neon-purple), var(--neon-cyan), var(--color-surface))'
               : 'linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(6, 182, 212, 0.3), var(--color-surface))',
             boxShadow: isRevealing
-              ? '0 0 35px rgba(168, 85, 247, 0.45), 0 20px 50px rgba(0, 0, 0, 0.85)'
-              : '0 0 25px rgba(168, 85, 247, 0.25), 0 15px 40px rgba(0, 0, 0, 0.65)',
+              ? '0 0 32px rgba(168, 85, 247, 0.42), 0 15px 40px rgba(0, 0, 0, 0.85)'
+              : '0 0 22px rgba(168, 85, 247, 0.22), 0 12px 30px rgba(0, 0, 0, 0.65)',
             transform: `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)`,
             transition: 'transform 0.15s ease-out, box-shadow 0.3s ease'
           }}
@@ -186,7 +186,7 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: '18px',
+              borderRadius: '17px',
               overflow: 'hidden',
               position: 'relative',
               background: '#04020a'
@@ -241,8 +241,8 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
                   top: `${cursorPos.y}%`,
                   left: `${cursorPos.x}%`,
                   transform: 'translate(-50%, -50%)',
-                  width: '54px',
-                  height: '54px',
+                  width: '50px',
+                  height: '50px',
                   borderRadius: '50%',
                   border: '1.5px dashed var(--neon-cyan)',
                   boxShadow: '0 0 16px rgba(6, 182, 212, 0.6)',
@@ -267,31 +267,31 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             />
 
             {/* Corner Brackets */}
-            <div style={{ position: 'absolute', top: '10px', left: '10px', borderTop: '2px solid var(--neon-purple)', borderLeft: '2px solid var(--neon-purple)', width: '14px', height: '14px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '10px', right: '10px', borderTop: '2px solid var(--neon-purple)', borderRight: '2px solid var(--neon-purple)', width: '14px', height: '14px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '10px', left: '10px', borderBottom: '2px solid var(--neon-cyan)', borderLeft: '2px solid var(--neon-cyan)', width: '14px', height: '14px', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '10px', right: '10px', borderBottom: '2px solid var(--neon-cyan)', borderRight: '2px solid var(--neon-cyan)', width: '14px', height: '14px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '10px', left: '10px', borderTop: '2px solid var(--neon-purple)', borderLeft: '2px solid var(--neon-purple)', width: '12px', height: '12px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '10px', right: '10px', borderTop: '2px solid var(--neon-purple)', borderRight: '2px solid var(--neon-purple)', width: '12px', height: '12px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '10px', left: '10px', borderBottom: '2px solid var(--neon-cyan)', borderLeft: '2px solid var(--neon-cyan)', width: '12px', height: '12px', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: '10px', right: '10px', borderBottom: '2px solid var(--neon-cyan)', borderRight: '2px solid var(--neon-cyan)', width: '12px', height: '12px', pointerEvents: 'none' }} />
 
             {/* Top Right Region Badge */}
             <div
               className="font-mono"
               style={{
                 position: 'absolute',
-                top: '12px',
-                right: '12px',
-                background: 'rgba(8, 4, 20, 0.85)',
+                top: '10px',
+                right: '10px',
+                background: 'rgba(8, 4, 20, 0.88)',
                 border: '1px solid rgba(168, 85, 247, 0.3)',
                 borderRadius: '8px',
-                padding: '2px 8px',
-                fontSize: '0.64rem',
+                padding: '2px 7px',
+                fontSize: '0.62rem',
                 color: 'var(--neon-violet-light)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '4px',
                 pointerEvents: 'none'
               }}
             >
-              <Activity size={11} className="animate-pulse-glow" style={{ color: 'var(--neon-cyan)' }} />
+              <Activity size={10} className="animate-pulse-glow" style={{ color: 'var(--neon-cyan)' }} />
               <span>{isRevealing ? activeRegion.split('•')[0] : 'NEURAL v2.6'}</span>
             </div>
 
@@ -299,39 +299,39 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             <div
               style={{
                 position: 'absolute',
-                bottom: '12px',
-                left: '12px',
-                right: '12px',
-                background: 'rgba(7, 3, 16, 0.9)',
+                bottom: '10px',
+                left: '10px',
+                right: '10px',
+                background: 'rgba(7, 3, 16, 0.92)',
                 border: '1px solid rgba(168, 85, 247, 0.35)',
                 borderRadius: '10px',
-                padding: '8px 12px',
+                padding: '7px 10px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 pointerEvents: 'none'
               }}
             >
-              <div>
-                <div className="font-cyber" style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="font-cyber" style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {name}
                 </div>
-                <div className="font-mono" style={{ fontSize: '0.66rem', color: isRevealing ? 'var(--neon-violet-light)' : '#9ca3af' }}>
+                <div className="font-mono" style={{ fontSize: '0.64rem', color: isRevealing ? 'var(--neon-violet-light)' : '#9ca3af' }}>
                   {isRevealing ? `[X:${Math.round(cursorPos.x)}% Y:${Math.round(cursorPos.y)}%]` : (isTouchDevice ? 'TOUCH TO SCAN' : 'HOVER TO REVEAL')}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                 <div
                   style={{
-                    width: '7px',
-                    height: '7px',
+                    width: '6px',
+                    height: '6px',
                     borderRadius: '50%',
                     background: isRevealing ? 'var(--neon-cyan)' : 'var(--neon-emerald)',
                     boxShadow: isRevealing ? '0 0 8px var(--neon-cyan)' : '0 0 8px var(--neon-emerald)'
                   }}
                 />
-                <span className="font-mono" style={{ fontSize: '0.64rem', color: isRevealing ? 'var(--neon-cyan)' : 'var(--neon-emerald)', fontWeight: 700 }}>
+                <span className="font-mono" style={{ fontSize: '0.62rem', color: isRevealing ? 'var(--neon-cyan)' : 'var(--neon-emerald)', fontWeight: 700 }}>
                   {isRevealing ? 'SCAN ⚡' : 'ONLINE'}
                 </span>
               </div>
@@ -341,13 +341,13 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
         </div>
       </div>
 
-      {/* Control Actions */}
+      {/* Control Actions - Optimized for Mobile Touch Targets */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
         <button
           onClick={() => setAutoScan(prev => !prev)}
           className="cyber-btn-secondary"
           style={{
-            padding: '6px 14px',
+            padding: '7px 14px',
             borderRadius: '999px',
             fontSize: '0.78rem',
             display: 'inline-flex',
@@ -356,7 +356,8 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             background: autoScan ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(6, 182, 212, 0.3))' : 'var(--color-surface)',
             borderColor: autoScan ? 'var(--neon-cyan)' : 'var(--color-border)',
             color: autoScan ? 'var(--neon-cyan)' : 'var(--text-secondary)',
-            minHeight: '34px'
+            minHeight: '36px',
+            touchAction: 'manipulation'
           }}
         >
           <Zap size={13} style={{ color: autoScan ? 'var(--neon-cyan)' : 'var(--neon-purple)' }} />
@@ -369,12 +370,13 @@ export default function InteractiveHologramPortrait({ name, lang, primaryPhoto, 
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
-            padding: '6px 12px',
+            padding: '7px 12px',
             borderRadius: '999px',
             border: '1px solid var(--color-border)',
             fontSize: '0.73rem',
             color: 'var(--text-secondary)',
-            minHeight: '34px'
+            minHeight: '36px',
+            userSelect: 'none'
           }}
         >
           <Scan size={12} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />

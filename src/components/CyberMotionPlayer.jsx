@@ -129,48 +129,51 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
     };
     window.addEventListener('resize', handleResize);
 
-    const particles = Array.from({ length: 45 }, () => ({
+    const particles = Array.from({ length: 35 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 1.2,
-      vy: (Math.random() - 0.5) * 1.2,
-      size: Math.random() * 3 + 1,
+      vx: (Math.random() - 0.5) * 1.0,
+      vy: (Math.random() - 0.5) * 1.0,
+      size: Math.random() * 2.5 + 1,
       opacity: Math.random() * 0.7 + 0.3
     }));
 
     let animId;
-    let localTime = 0;
+    let angle = 0;
 
     const render = () => {
-      if (isPlaying) {
-        localTime += 0.02 * speed;
-        setProgress(prev => (prev + 0.15 * speed) % 100);
-      }
-
       ctx.clearRect(0, 0, width, height);
 
-      // Radial glowing background aura
-      const grad = ctx.createRadialGradient(
-        width / 2,
-        height / 2,
-        50,
-        width / 2,
-        height / 2,
-        width * 0.6
-      );
-      grad.addColorStop(0, `${currentScene.color}25`);
-      grad.addColorStop(0.5, `${currentScene.accentColor}12`);
-      grad.addColorStop(1, 'rgba(6, 4, 14, 0)');
+      if (isPlaying) {
+        angle += 0.02 * speed;
+        setProgress((prev) => (prev >= 100 ? 0 : prev + 0.25 * speed));
+      }
 
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
+      // Draw Rotating Outer Energy Rings
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
 
-      // Draw floating ethereal aura particles
-      particles.forEach((p, idx) => {
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.min(width, height) * 0.36, 0, Math.PI * 2);
+      ctx.strokeStyle = `${currentScene.color}30`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 12]);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.min(width, height) * 0.42, angle, angle + Math.PI * 1.2);
+      ctx.strokeStyle = `${currentScene.accentColor}45`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Draw Floating Quantum Particles
+      particles.forEach((p) => {
         if (isPlaying) {
           p.x += p.vx * speed;
           p.y += p.vy * speed;
-
           if (p.x < 0) p.x = width;
           if (p.x > width) p.x = 0;
           if (p.y < 0) p.y = height;
@@ -179,25 +182,11 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = idx % 2 === 0 ? currentScene.color : currentScene.accentColor;
-        ctx.globalAlpha = p.opacity * (0.6 + Math.sin(localTime + idx) * 0.3);
-        ctx.shadowColor = currentScene.color;
+        ctx.fillStyle = `${currentScene.color}${Math.floor(p.opacity * 255).toString(16).padStart(2, '0')}`;
         ctx.shadowBlur = 10;
+        ctx.shadowColor = currentScene.color;
         ctx.fill();
-        ctx.shadowBlur = 0;
       });
-
-      // Ambient rotating light ring
-      ctx.save();
-      ctx.translate(width / 2, height / 2);
-      ctx.rotate(localTime * 0.25);
-      ctx.strokeStyle = `${currentScene.color}35`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([12, 16]);
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.min(width, height) * 0.42, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
 
       animId = requestAnimationFrame(render);
     };
@@ -218,14 +207,14 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(3, 2, 8, 0.94)',
+        background: 'rgba(3, 2, 8, 0.95)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem',
-        animation: 'fadeIn 0.25s ease-out'
+        padding: '0',
+        animation: 'fadeIn 0.22s ease-out'
       }}
       onClick={onClose}
     >
@@ -235,30 +224,33 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
           position: 'relative',
           width: '100%',
           maxWidth: '960px',
-          maxHeight: '92vh',
+          maxHeight: '94vh',
+          maxHeight: '94dvh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          borderRadius: '24px',
+          borderRadius: '20px',
           border: `1px solid ${currentScene.color}40`,
           boxShadow: `0 0 50px ${currentScene.color}30, 0 25px 60px rgba(0,0,0,0.9)`,
-          background: 'rgba(8, 4, 18, 0.96)'
+          background: 'rgba(8, 4, 18, 0.97)',
+          margin: 'auto 0.5rem'
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header HUD Bar */}
         <div
           style={{
-            padding: '1rem 1.4rem',
+            padding: '0.85rem 1.1rem',
+            paddingTop: 'max(0.85rem, var(--sat))',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
-            background: 'rgba(12, 6, 26, 0.6)'
+            gap: '0.75rem',
+            background: 'rgba(12, 6, 26, 0.7)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
             <div
               style={{
                 width: '32px',
@@ -269,22 +261,23 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#fff',
-                boxShadow: `0 0 16px ${currentScene.color}`
+                boxShadow: `0 0 14px ${currentScene.color}`,
+                flexShrink: 0
               }}
             >
-              <currentScene.icon size={17} />
+              <currentScene.icon size={16} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="font-cyber" style={{ fontSize: '0.98rem', fontWeight: 800, color: '#fff' }}>
-                  {lang === 'ar' ? currentScene.titleAr : currentScene.titleEn}
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span className="font-cyber" style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>
+                  {lang === 'ar' ? currentScene.titleAr.split('•')[0] : currentScene.titleEn.split('•')[0]}
                 </span>
                 <span
                   className="font-mono"
                   style={{
-                    fontSize: '0.68rem',
-                    padding: '2px 8px',
-                    borderRadius: '6px',
+                    fontSize: '0.62rem',
+                    padding: '2px 6px',
+                    borderRadius: '5px',
                     background: `${currentScene.color}25`,
                     border: `1px solid ${currentScene.color}60`,
                     color: currentScene.color,
@@ -294,7 +287,7 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                   {currentScene.badge}
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {lang === 'ar' ? currentScene.roleAr : currentScene.roleEn}
               </p>
             </div>
@@ -310,10 +303,12 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}
+            aria-label="إغلاق الشاشة السينمائية"
           >
-            <X size={18} />
+            <X size={17} />
           </button>
         </div>
 
@@ -322,13 +317,13 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
           style={{
             position: 'relative',
             flex: 1,
-            minHeight: '340px',
-            maxHeight: '440px',
+            minHeight: '280px',
+            maxHeight: '400px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
-            background: 'radial-gradient(circle at 50% 50%, rgba(20, 10, 42, 0.7), rgba(4, 2, 10, 0.98))'
+            background: 'radial-gradient(circle at 50% 50%, rgba(20, 10, 42, 0.75), rgba(4, 2, 10, 0.98))'
           }}
         >
           {/* Background Ambient Canvas */}
@@ -358,12 +353,12 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
             <div
               style={{
                 position: 'relative',
-                width: 'clamp(200px, 32vw, 270px)',
-                height: 'clamp(200px, 32vw, 270px)',
-                borderRadius: '24px',
-                padding: '5px',
+                width: 'clamp(180px, 28vw, 250px)',
+                height: 'clamp(180px, 28vw, 250px)',
+                borderRadius: '22px',
+                padding: '4px',
                 background: `linear-gradient(135deg, ${currentScene.color}, rgba(255,255,255,0.4), ${currentScene.accentColor})`,
-                boxShadow: `0 0 40px ${currentScene.color}60, 0 15px 35px rgba(0,0,0,0.8)`
+                boxShadow: `0 0 35px ${currentScene.color}60, 0 15px 35px rgba(0,0,0,0.8)`
               }}
             >
               <img
@@ -373,7 +368,7 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  borderRadius: '20px',
+                  borderRadius: '18px',
                   display: 'block'
                 }}
               />
@@ -382,17 +377,17 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '10px',
+                  bottom: '8px',
                   left: '50%',
                   transform: 'translateX(-50%)',
                   background: 'rgba(6, 4, 14, 0.88)',
                   backdropFilter: 'blur(10px)',
                   border: `1px solid ${currentScene.color}80`,
                   borderRadius: '999px',
-                  padding: '3px 12px',
+                  padding: '2px 10px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   whiteSpace: 'nowrap',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.6)'
                 }}
@@ -409,7 +404,7 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                 <span
                   className="font-mono"
                   style={{
-                    fontSize: '0.68rem',
+                    fontSize: '0.64rem',
                     fontWeight: 700,
                     color: '#ffffff',
                     letterSpacing: '0.04em'
@@ -424,28 +419,29 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
             <div
               style={{
                 display: 'flex',
-                gap: '8px',
-                marginTop: '1rem',
+                gap: '6px',
+                marginTop: '0.85rem',
                 flexWrap: 'wrap',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                padding: '0 0.5rem'
               }}
             >
               {currentScene.stats.map((s, idx) => (
                 <div
                   key={idx}
                   style={{
-                    background: 'rgba(15, 8, 30, 0.75)',
+                    background: 'rgba(15, 8, 30, 0.8)',
                     backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    padding: '4px 10px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '9px',
+                    padding: '3px 8px',
                     textAlign: 'center'
                   }}
                 >
-                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>
                     {lang === 'ar' ? s.labelAr : s.labelEn}
                   </div>
-                  <div className="font-mono" style={{ fontSize: '0.78rem', fontWeight: 800, color: currentScene.accentColor }}>
+                  <div className="font-mono" style={{ fontSize: '0.74rem', fontWeight: 800, color: currentScene.accentColor }}>
                     {s.val}
                   </div>
                 </div>
@@ -454,15 +450,18 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
           </div>
         </div>
 
-        {/* Avatar Character Switcher Tabs */}
+        {/* Avatar Character Switcher Tabs - Mobile Swipeable Snap Pills */}
         <div
+          className="no-scrollbar"
           style={{
-            padding: '0.75rem 1.2rem',
-            background: 'rgba(10, 5, 22, 0.85)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '8px'
+            padding: '0.65rem 0.85rem',
+            background: 'rgba(10, 5, 22, 0.9)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            gap: '8px',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollSnapType: 'x mandatory'
           }}
         >
           {scenes.map((sc, idx) => {
@@ -480,19 +479,24 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                   gap: '8px',
                   padding: '6px 10px',
                   borderRadius: '12px',
-                  background: isSelected ? `${sc.color}22` : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${isSelected ? sc.color : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: isSelected ? `${sc.color}25` : 'rgba(255, 255, 255, 0.04)',
+                  border: `1px solid ${isSelected ? sc.color : 'rgba(255, 255, 255, 0.1)'}`,
                   color: isSelected ? '#ffffff' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  flex: '1 0 auto',
+                  minWidth: '135px',
+                  scrollSnapAlign: 'start',
+                  minHeight: '44px',
+                  touchAction: 'manipulation'
                 }}
               >
                 {/* Circular Mini Avatar Icon */}
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '30px',
+                    height: '30px',
                     borderRadius: '50%',
                     overflow: 'hidden',
                     flexShrink: 0,
@@ -510,7 +514,7 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                   <div
                     className="font-cyber"
                     style={{
-                      fontSize: '0.74rem',
+                      fontSize: '0.72rem',
                       fontWeight: 700,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
@@ -519,16 +523,8 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
                   >
                     {lang === 'ar' ? sc.titleAr.split('•')[0] : sc.titleEn.split('•')[0]}
                   </div>
-                  <div
-                    style={{
-                      fontSize: '0.66rem',
-                      color: isSelected ? sc.accentColor : 'var(--text-muted)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {lang === 'ar' ? sc.roleAr : sc.roleEn}
+                  <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    {sc.badge.split('_')[0]}
                   </div>
                 </div>
               </button>
@@ -536,64 +532,78 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
           })}
         </div>
 
-        {/* Footer Playback Controls & Progress */}
+        {/* Player Controls Bar */}
         <div
           style={{
-            padding: '0.75rem 1.4rem',
+            padding: '0.65rem 1rem',
+            paddingBottom: 'max(0.75rem, var(--sab))',
+            background: 'rgba(7, 3, 16, 0.95)',
             borderTop: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
-            background: 'rgba(6, 3, 14, 0.95)'
+            gap: '8px'
           }}
         >
+          {/* Play/Pause & Speed */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="cyber-btn-primary"
+              className="cyber-btn-secondary"
               style={{
-                width: '34px',
-                height: '34px',
+                width: '38px',
+                height: '38px',
                 padding: 0,
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minHeight: 'auto'
+                background: isPlaying ? 'rgba(168, 85, 247, 0.15)' : 'var(--color-surface)',
+                borderColor: isPlaying ? 'var(--neon-purple)' : 'var(--color-border)'
               }}
+              title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الحركة'}
             >
-              {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+              {isPlaying ? <Pause size={16} style={{ color: 'var(--neon-purple)' }} /> : <Play size={16} />}
             </button>
 
             <button
-              onClick={() => setSpeed(s => (s === 1 ? 1.5 : s === 1.5 ? 2 : 1))}
+              onClick={() => setSpeed((s) => (s === 1 ? 1.5 : s === 1.5 ? 2 : 1))}
               className="cyber-btn-secondary"
               style={{
-                padding: '4px 10px',
-                fontSize: '0.72rem',
-                minHeight: 'auto',
-                borderRadius: '8px'
+                padding: '6px 10px',
+                fontSize: '0.74rem',
+                borderRadius: '10px',
+                minHeight: '38px'
               }}
             >
-              {speed}x
+              <span className="font-mono" style={{ fontWeight: 700 }}>{speed}x</span>
             </button>
           </div>
 
-          {/* Timeline Bar */}
-          <div style={{ flex: 1, height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '999px', overflow: 'hidden' }}>
+          {/* Timeline progress line */}
+          <div style={{ flex: 1, margin: '0 8px' }}>
             <div
               style={{
-                height: '100%',
-                width: `${progress}%`,
-                background: `linear-gradient(90deg, ${currentScene.color}, ${currentScene.accentColor})`,
-                boxShadow: `0 0 10px ${currentScene.color}`
+                height: '5px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '999px',
+                overflow: 'hidden'
               }}
-            />
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${progress}%`,
+                  background: `linear-gradient(90deg, ${currentScene.color}, ${currentScene.accentColor})`,
+                  borderRadius: '999px',
+                  boxShadow: `0 0 8px ${currentScene.color}`
+                }}
+              />
+            </div>
           </div>
 
-          <div className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            FPS: 60 • SYNC: OK
+          <div className="font-mono" style={{ fontSize: '0.68rem', color: currentScene.color, fontWeight: 700, flexShrink: 0 }}>
+            {Math.round(progress)}%
           </div>
         </div>
       </div>
@@ -602,10 +612,6 @@ export default function CyberMotionPlayer({ isOpen, onClose, initialSceneIndex =
         @keyframes floatSlow {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-8px); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.97); }
-          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

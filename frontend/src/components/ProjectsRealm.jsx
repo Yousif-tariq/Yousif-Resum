@@ -24,8 +24,8 @@ export default function ProjectsRealm({ data, lang }) {
     setSelectedProject(project);
     try {
       confetti({
-        particleCount: 45,
-        spread: 70,
+        particleCount: 40,
+        spread: 60,
         colors: ['#a855f7', '#f43f5e', '#c084fc', '#06b6d4'],
         origin: { y: 0.7 }
       });
@@ -42,23 +42,23 @@ export default function ProjectsRealm({ data, lang }) {
       <div className="max-w-7xl" style={{ width: '100%' }}>
         
         {/* Realm Header */}
-        <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem, 5vw, 3.5rem)' }}>
-          <div className="cyber-badge" style={{ marginBottom: '0.85rem' }}>
-            <Code2 size={15} />
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 4vw, 3rem)' }}>
+          <div className="cyber-badge" style={{ marginBottom: '0.75rem' }}>
+            <Code2 size={14} />
             <span>REALM 03 // PROJECT MULTIVERSE</span>
           </div>
           <h2
             className="font-cyber text-glow-purple"
             style={{
-              fontSize: 'clamp(1.9rem, 4.5vw, 3.2rem)',
+              fontSize: 'clamp(1.75rem, 4.2vw, 3rem)',
               fontWeight: 800,
-              marginBottom: '0.75rem',
+              marginBottom: '0.65rem',
               color: 'var(--text-heading)'
             }}
           >
             {data.title}
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', maxWidth: '38rem', margin: '0 auto', lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.9rem, 1.8vw, 1.1rem)', maxWidth: '38rem', margin: '0 auto', lineHeight: 1.65 }}>
             {data.subtitle}
           </p>
         </div>
@@ -67,8 +67,8 @@ export default function ProjectsRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 310px), 1fr))',
-            gap: 'clamp(1.2rem, 3vw, 1.75rem)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+            gap: 'clamp(1rem, 2.5vw, 1.6rem)',
             maxWidth: '78rem',
             margin: '0 auto',
             width: '100%'
@@ -79,7 +79,7 @@ export default function ProjectsRealm({ data, lang }) {
               key={project.id}
               className="glass-panel"
               style={{
-                padding: 'clamp(1.25rem, 3vw, 1.85rem)',
+                padding: 'clamp(1.1rem, 2.8vw, 1.7rem)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -89,8 +89,8 @@ export default function ProjectsRealm({ data, lang }) {
               }}
             >
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span className="cyber-badge">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                  <span className="cyber-badge" style={{ fontSize: '0.72rem' }}>
                     {project.category}
                   </span>
                   
@@ -104,11 +104,12 @@ export default function ProjectsRealm({ data, lang }) {
                       color: 'var(--neon-cyan)',
                       background: 'rgba(6, 182, 212, 0.1)',
                       padding: '3px 8px',
-                      fontSize: '0.7rem'
+                      fontSize: '0.7rem',
+                      touchAction: 'manipulation'
                     }}
                     title="مشاهدة محاكاة الأنيميشن الحية للمشروع"
                   >
-                    <Play size={11} fill="var(--neon-cyan)" />
+                    <Play size={10} fill="var(--neon-cyan)" />
                     <span>{lang === 'ar' ? 'مشهد متحرك' : 'Live Motion'}</span>
                   </button>
                 </div>
@@ -116,9 +117,9 @@ export default function ProjectsRealm({ data, lang }) {
                 <h3
                   className="font-cyber"
                   style={{
-                    fontSize: 'clamp(1.15rem, 2.5vw, 1.35rem)',
+                    fontSize: 'clamp(1.05rem, 2.2vw, 1.25rem)',
                     fontWeight: 800,
-                    marginBottom: '0.75rem',
+                    marginBottom: '0.65rem',
                     color: 'var(--text-primary)'
                   }}
                 >
@@ -127,10 +128,10 @@ export default function ProjectsRealm({ data, lang }) {
 
                 <p
                   style={{
-                    fontSize: '0.92rem',
+                    fontSize: '0.88rem',
                     color: 'var(--text-secondary)',
-                    lineHeight: 1.65,
-                    marginBottom: '1.25rem'
+                    lineHeight: 1.6,
+                    marginBottom: '1.1rem'
                   }}
                 >
                   {project.desc}
@@ -141,21 +142,21 @@ export default function ProjectsRealm({ data, lang }) {
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '6px',
+                    gap: '4px',
                     padding: '8px',
                     borderRadius: '12px',
                     background: 'var(--input-bg)',
                     border: '1px solid var(--color-border)',
-                    marginBottom: '1.25rem',
+                    marginBottom: '1.1rem',
                     textAlign: 'center'
                   }}
                 >
                   {Object.entries(project.stats).map(([key, val], idx) => (
                     <div key={idx}>
-                      <div className="font-mono" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.88rem)', fontWeight: 800, color: 'var(--neon-purple)' }}>
+                      <div className="font-mono" style={{ fontSize: 'clamp(0.72rem, 1.6vw, 0.84rem)', fontWeight: 800, color: 'var(--neon-purple)' }}>
                         {val}
                       </div>
-                      <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
                         {key}
                       </div>
                     </div>
@@ -163,16 +164,16 @@ export default function ProjectsRealm({ data, lang }) {
                 </div>
 
                 {/* Tech Tags */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '1.5rem' }}>
-                  {project.tags.map((tag, idx) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '1.25rem' }}>
+                  {project.tags.map((tag, tIdx) => (
                     <span
-                      key={idx}
+                      key={tIdx}
                       className="font-mono"
                       style={{
-                        fontSize: '0.72rem',
-                        padding: '3px 8px',
+                        fontSize: '0.7rem',
+                        padding: '3px 7px',
                         borderRadius: '6px',
-                        background: 'rgba(168, 85, 247, 0.1)',
+                        background: 'rgba(168, 85, 247, 0.08)',
                         border: '1px solid var(--color-border)',
                         color: 'var(--neon-violet-light)',
                         fontWeight: 600
@@ -189,35 +190,19 @@ export default function ProjectsRealm({ data, lang }) {
                 <button
                   onClick={() => handleInspect(project)}
                   className="cyber-btn-secondary"
-                  style={{
-                    flex: '1 1 140px',
-                    padding: '10px 14px',
-                    fontSize: '0.86rem',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
+                  style={{ flex: '1 1 120px', padding: '9px 14px', fontSize: '0.82rem' }}
                 >
-                  <Cpu size={15} />
-                  <span>{lang === 'ar' ? 'فحص المعمارية' : 'Inspect Blueprint'}</span>
+                  <Cpu size={14} />
+                  <span>{data.viewDetails}</span>
                 </button>
 
                 <button
                   onClick={() => launchProjectAnimation(pIdx)}
                   className="cyber-btn-primary"
-                  style={{
-                    flex: '1 1 120px',
-                    padding: '10px 14px',
-                    fontSize: '0.86rem',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
+                  style={{ flex: '1 1 120px', padding: '9px 14px', fontSize: '0.82rem' }}
                 >
-                  <Film size={15} />
-                  <span>{lang === 'ar' ? 'المشهد الحركي' : 'Animation'}</span>
+                  <Sparkles size={14} />
+                  <span>{lang === 'ar' ? 'محاكاة الأنمي' : 'Simulate'}</span>
                 </button>
               </div>
 
@@ -227,98 +212,134 @@ export default function ProjectsRealm({ data, lang }) {
 
       </div>
 
-      {/* Deep Architecture Blueprint Modal */}
+      {/* Deep Blueprint Modal Viewer - Mobile Optimized Bottom-Sheet */}
       {selectedProject && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
+            zIndex: 9990,
             background: 'var(--modal-overlay)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            zIndex: 100,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-end',
             justifyContent: 'center',
-            padding: '1rem',
-            animation: 'fadeInModal 0.2s ease-out'
+            padding: '0',
+            animation: 'fadeIn 0.2s ease-out'
           }}
           onClick={() => setSelectedProject(null)}
         >
           <div
             className="glass-panel-glow"
             style={{
-              maxWidth: '40rem',
               width: '100%',
+              maxWidth: '820px',
               maxHeight: '90vh',
               maxHeight: '90dvh',
               overflowY: 'auto',
-              padding: 'clamp(1.25rem, 4vw, 2.25rem)',
-              border: '1px solid var(--neon-purple)',
-              boxShadow: 'var(--glow-purple)',
-              position: 'relative'
+              WebkitOverflowScrolling: 'touch',
+              padding: 'clamp(1.25rem, 3.5vw, 2.25rem)',
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              borderTopLeftRadius: '24px',
+              borderTopRightRadius: '24px',
+              position: 'relative',
+              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.9)',
+              paddingBottom: 'max(2rem, var(--sab))',
+              paddingLeft: 'max(1.25rem, var(--sal))',
+              paddingRight: 'max(1.25rem, var(--sar))'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '8px' }}>
-              <div className="cyber-badge">
-                <Terminal size={14} />
-                <span>SYSTEM ARCHITECTURE REPORT</span>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem', gap: '10px' }}>
+              <div>
+                <span className="cyber-badge" style={{ marginBottom: '0.4rem' }}>
+                  {selectedProject.category}
+                </span>
+                <h3 className="font-cyber" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.8rem)', fontWeight: 900, color: 'var(--text-heading)' }}>
+                  {selectedProject.title}
+                </h3>
               </div>
+
               <button
                 onClick={() => setSelectedProject(null)}
                 className="cyber-btn-secondary"
-                style={{ padding: '6px 10px', borderRadius: '8px', minHeight: '34px' }}
-                aria-label="إغلاق النافذة"
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  padding: 0
+                }}
+                aria-label="إغلاق المعاينة"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <h3 className="font-cyber text-glow-purple" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.55rem)', fontWeight: 800, marginBottom: '0.85rem', color: 'var(--text-heading)' }}>
-              {selectedProject.title}
-            </h3>
-
+            {/* Description */}
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.94rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-              {selectedProject.desc}
+              {selectedProject.blueprint}
             </p>
 
+            {/* Architectural Highlights */}
             <div style={{ marginBottom: '1.5rem' }}>
-              <h4 style={{ fontSize: '0.92rem', color: 'var(--neon-purple)', marginBottom: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={15} />
-                <span>{lang === 'ar' ? 'المعايير والخصائص المعمارية:' : 'Core Architectural Milestones:'}</span>
-              </h4>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {selectedProject.features.map((feat, idx) => (
-                  <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.5 }}>
-                    <CheckCircle2 size={16} style={{ color: 'var(--neon-purple)', flexShrink: 0, marginTop: '3px' }} />
-                    <span>{feat}</span>
-                  </li>
+              <div className="font-cyber" style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--neon-purple)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Terminal size={15} />
+                <span>{lang === 'ar' ? 'السمات المعمارية والأداء' : 'Architectural Metrics'}</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {selectedProject.highlights.map((hl, hIdx) => (
+                  <div
+                    key={hIdx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      borderRadius: '10px',
+                      background: 'rgba(168, 85, 247, 0.08)',
+                      border: '1px solid var(--color-border)',
+                      fontSize: '0.86rem',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    <CheckCircle2 size={15} style={{ color: 'var(--neon-emerald)', flexShrink: 0 }} />
+                    <span>{hl}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '1rem' }}>
               <button
                 onClick={() => {
                   setSelectedProject(null);
                   launchProjectAnimation(0);
                 }}
                 className="cyber-btn-primary"
-                style={{ flex: '1 1 180px', padding: '12px' }}
+                style={{ flex: '1 1 180px' }}
               >
                 <Film size={16} />
-                <span>{lang === 'ar' ? 'تشغيل المشهد الحركي للمشروع' : 'Play Live Motion Scene'}</span>
+                <span>{lang === 'ar' ? 'تشغيل المشهد السينمائي' : 'Launch Holo-Cinema'}</span>
               </button>
 
               <button
                 onClick={() => setSelectedProject(null)}
                 className="cyber-btn-secondary"
-                style={{ flex: '1 1 120px', padding: '12px' }}
+                style={{ flex: '1 1 140px' }}
               >
-                <span>{lang === 'ar' ? 'إغلاق' : 'Close'}</span>
+                <span>{lang === 'ar' ? 'إغلاق المعاينة' : 'Close Details'}</span>
               </button>
             </div>
+
           </div>
         </div>
       )}
@@ -330,13 +351,6 @@ export default function ProjectsRealm({ data, lang }) {
         initialSceneIndex={cinemaSceneIndex}
         lang={lang}
       />
-
-      <style>{`
-        @keyframes fadeInModal {
-          from { opacity: 0; transform: scale(0.96); }
-          to { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
     </section>
   );
 }

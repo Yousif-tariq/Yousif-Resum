@@ -18,9 +18,13 @@ User = get_user_model()
 
 def seed():
     # 1. Create Superuser if not exists
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-        print("[OK] Superuser created: admin / admin123")
+    username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+    password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+    email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
+
+    if not User.objects.filter(username=username).exists():
+        User.objects.create_superuser(username, email, password)
+        print(f"[OK] Superuser created: {username}")
 
     # 2. Hero Profile
     if not HeroProfile.objects.exists():

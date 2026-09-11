@@ -25,9 +25,15 @@ export function recordVisit(lang = 'en', path = '/') {
   try {
     if (!API_BASE) return; // Silent if no API URL configured
 
+    let clientTimezone = '';
+    try {
+      clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch (tzErr) {}
+
     const payload = {
       device_id: getOrCreateDeviceId(),
       language: lang || 'en',
+      timezone: clientTimezone,
       screen_resolution: typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '',
       referrer: typeof document !== 'undefined' ? document.referrer || '' : '',
       path_visited: path || window.location.pathname || '/'

@@ -1,5 +1,6 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.response import Response
 from rest_framework import status
 from .models import (
@@ -9,8 +10,20 @@ from .models import (
     ProjectItem,
     ExperienceItem,
     ContactMessage,
-    SiteSettings
+    SiteSettings,
+    VisitorLog
 )
+from .serializers import (
+    ContactMessageSerializer,
+    VisitorLogSerializer
+)
+
+class ContactRateThrottle(AnonRateThrottle):
+    rate = '10/minute'
+
+class VisitTrackingThrottle(AnonRateThrottle):
+    rate = '180/minute'
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -203,34 +216,176 @@ def get_portfolio_data(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([ContactRateThrottle])
 def dispatch_contact_message(request):
     """
-    Receives contact form submissions and saves them into Django Admin.
+    Receives contact form submissions, validates data through DRF Serializer,
+    and saves them safely into Django Admin.
     """
-    data = request.data
-    name = data.get('name')
-    email = data.get('email')
-    subject = data.get('subject', 'General Signal')
-    message = data.get('message')
-
-    if not name or not email or not message:
+    serializer = ContactMessageSerializer(data=request.data)
+    if not serializer.is_valid():
         return Response(
-            {"error": "جميع الحقول المطلوبة (الاسم، البريد، الرسالة) يجب تعبئتها"},
+            {"error": "بيانات غير صالحة", "details": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    msg_obj = ContactMessage.objects.create(
-        name=name,
-        email=email,
-        subject=subject,
-        message=message
-    )
+    msg_obj = serializer.save()
 
     return Response({
         "success": True,
         "message": "تم استلام رسالتك بنجاح وتسجيلها في قاعدة بيانات الإدارة (Django Admin)",
         "id": msg_obj.id
     }, status=status.HTTP_201_CREATED)
+
+
+import urllib.request
+import json
+import socket
+
+# In-memory GeoIP Cache to prevent repeated external network lookups
+GEO_IP_CACHE = {}
+
+def is_private_ip(ip):
+    if not ip or ip in ('127.0.0.1', '::1', 'localhost', 'Unknown'):
+        return True
+    try:
+        if ip.startswith('10.') or ip.startswith('192.168.') or ip.startswith('172.'):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def resolve_ip_location(ip_address, request, client_data=None):
+    """
+    Accurately resolves geographical location (Country, Region, City, Coordinates, Timezone, ISP)
+    from Cloudflare/Vercel edge headers, browser client data, and IP Geolocation API.
+    """
+    client_data = client_data or {}
+
+    # 1. Check Cloud Edge Headers (Cloudflare, Vercel, CloudFront)
+    country = (
+        request.META.get('HTTP_CF_IPCOUNTRY')
+        or request.META.get('HTTP_X_VERCEL_IP_COUNTRY')
+        or request.META.get('HTTP_CLOUDFRONT_VIEWER_COUNTRY')
+        or ''
+    ).strip()
+
+    country_code = country[:10] if country else ''
+    city = (
+        request.META.get('HTTP_CF_IPCITY')
+        or request.META.get('HTTP_X_VERCEL_IP_CITY')
+        or ''
+    ).strip()
+
+    region = (
+        request.META.get('HTTP_CF_REGION')
+        or request.META.get('HTTP_X_VERCEL_IP_COUNTRY_REGION')
+        or ''
+    ).strip()
+
+    timezone = (
+        request.META.get('HTTP_CF_TIMEZONE')
+        or request.META.get('HTTP_X_VERCEL_IP_TIMEZONE')
+        or client_data.get('timezone')
+        or ''
+    ).strip()
+
+    latitude = None
+    longitude = None
+
+    lat_hdr = request.META.get('HTTP_CF_IPLATITUDE') or request.META.get('HTTP_X_VERCEL_IP_LATITUDE') or client_data.get('latitude')
+    lon_hdr = request.META.get('HTTP_CF_IPLONGITUDE') or request.META.get('HTTP_X_VERCEL_IP_LONGITUDE') or client_data.get('longitude')
+
+    try:
+        if lat_hdr:
+            latitude = float(lat_hdr)
+        if lon_hdr:
+            longitude = float(lon_hdr)
+    except (ValueError, TypeError):
+        pass
+
+    isp = request.META.get('HTTP_CF_RAY', '')
+    if isp:
+        isp = f"Cloudflare ({request.META.get('HTTP_CF_IPCOUNTRY', 'Edge')})"
+
+    # 2. If already resolved by Edge headers, return immediately
+    if country and city and latitude is not None and longitude is not None:
+        return {
+            "country": country,
+            "country_code": country_code,
+            "region": region,
+            "city": city,
+            "latitude": latitude,
+            "longitude": longitude,
+            "timezone": timezone,
+            "isp": isp or "Cloud Edge Network"
+        }
+
+    # 3. Check Localhost / Private IP
+    if is_private_ip(ip_address):
+        return {
+            "country": "المملكة العربية السعودية (تطوير محلي)",
+            "country_code": "SA",
+            "region": "منطقة الرياض",
+            "city": "الرياض",
+            "latitude": 24.7136,
+            "longitude": 46.6753,
+            "timezone": timezone or "Asia/Riyadh",
+            "isp": "Localhost Development Core"
+        }
+
+    # 4. Check In-Memory Cache for Public IP
+    if ip_address in GEO_IP_CACHE:
+        cached = GEO_IP_CACHE[ip_address]
+        return {
+            "country": country or cached.get("country"),
+            "country_code": country_code or cached.get("country_code"),
+            "region": region or cached.get("region"),
+            "city": city or cached.get("city"),
+            "latitude": latitude if latitude is not None else cached.get("latitude"),
+            "longitude": longitude if longitude is not None else cached.get("longitude"),
+            "timezone": timezone or cached.get("timezone"),
+            "isp": isp or cached.get("isp")
+        }
+
+    # 5. Fallback to Fast IP Geolocation Lookup API
+    try:
+        api_url = f"http://ip-api.com/json/{ip_address}?fields=status,message,country,countryCode,regionName,city,lat,lon,timezone,isp,org"
+        req = urllib.request.Request(
+            api_url,
+            headers={'User-Agent': 'Quantum-Core-Portfolio/2.6'}
+        )
+        with urllib.request.urlopen(req, timeout=1.8) as resp:
+            if resp.status == 200:
+                geo_data = json.loads(resp.read().decode('utf-8'))
+                if geo_data.get('status') == 'success':
+                    result = {
+                        "country": geo_data.get('country') or country or 'Unknown',
+                        "country_code": geo_data.get('countryCode') or country_code or '',
+                        "region": geo_data.get('regionName') or region or '',
+                        "city": geo_data.get('city') or city or '',
+                        "latitude": float(geo_data.get('lat')) if geo_data.get('lat') is not None else latitude,
+                        "longitude": float(geo_data.get('lon')) if geo_data.get('lon') is not None else longitude,
+                        "timezone": geo_data.get('timezone') or timezone or '',
+                        "isp": geo_data.get('isp') or geo_data.get('org') or isp or ''
+                    }
+                    GEO_IP_CACHE[ip_address] = result
+                    return result
+    except Exception:
+        pass
+
+    # Safe default fallback
+    return {
+        "country": country or "Unknown",
+        "country_code": country_code or "",
+        "region": region or "",
+        "city": city or "",
+        "latitude": latitude,
+        "longitude": longitude,
+        "timezone": timezone,
+        "isp": isp or "Direct ISP"
+    }
 
 
 def get_client_ip(request):
@@ -246,6 +401,18 @@ def get_client_ip(request):
         return x_forwarded_for.split(',')[0].strip()
 
     return request.META.get('REMOTE_ADDR', '')
+
+
+def mask_ip(ip_str):
+    """
+    Anonymizes IP address for public analytics privacy.
+    """
+    if not ip_str:
+        return None
+    parts = ip_str.split('.')
+    if len(parts) == 4:
+        return f"{parts[0]}.{parts[1]}.***.***"
+    return "anon-ip"
 
 
 def parse_device_info(ua_string):
@@ -294,12 +461,12 @@ def parse_device_info(ua_string):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([VisitTrackingThrottle])
 def track_visit(request):
     """
-    Endpoint to asynchronously log visitor traffic, device fingerprints, and client metadata.
+    Endpoint to asynchronously log visitor traffic, device fingerprints, and client metadata
+    with precise geographical location and coordinates.
     """
-    from .models import VisitorLog
-
     data = request.data or {}
     device_id = str(data.get('device_id', '')).strip()
     if not device_id:
@@ -309,8 +476,8 @@ def track_visit(request):
     ip_address = get_client_ip(request)
     device_type, os_name, browser_name = parse_device_info(user_agent)
 
-    country = request.META.get('HTTP_CF_IPCOUNTRY') or request.META.get('HTTP_X_VERCEL_IP_COUNTRY') or ''
-    city = request.META.get('HTTP_X_VERCEL_IP_CITY') or ''
+    # Resolve precise geolocation
+    geo = resolve_ip_location(ip_address, request, data)
 
     log = VisitorLog.objects.create(
         ip_address=ip_address or None,
@@ -323,8 +490,14 @@ def track_visit(request):
         screen_resolution=str(data.get('screen_resolution', ''))[:50],
         referrer=str(data.get('referrer', ''))[:500] if data.get('referrer') else None,
         path_visited=str(data.get('path_visited', '/'))[:200],
-        country=country[:100] if country else None,
-        city=city[:100] if city else None
+        country=geo.get('country')[:100] if geo.get('country') else None,
+        country_code=geo.get('country_code')[:10] if geo.get('country_code') else None,
+        region=geo.get('region')[:100] if geo.get('region') else None,
+        city=geo.get('city')[:100] if geo.get('city') else None,
+        latitude=geo.get('latitude'),
+        longitude=geo.get('longitude'),
+        timezone=geo.get('timezone')[:60] if geo.get('timezone') else None,
+        isp=geo.get('isp')[:150] if geo.get('isp') else None
     )
 
     return Response({
@@ -333,7 +506,17 @@ def track_visit(request):
         "log_id": log.id,
         "device_type": device_type,
         "os": os_name,
-        "browser": browser_name
+        "browser": browser_name,
+        "location": {
+            "city": log.city,
+            "region": log.region,
+            "country": log.country,
+            "country_code": log.country_code,
+            "latitude": log.latitude,
+            "longitude": log.longitude,
+            "timezone": log.timezone,
+            "isp": log.isp
+        }
     }, status=status.HTTP_201_CREATED)
 
 
@@ -341,9 +524,8 @@ def track_visit(request):
 @permission_classes([AllowAny])
 def get_analytics_stats(request):
     """
-    Returns aggregated analytics summary for visitor traffic.
+    Returns aggregated analytics summary for visitor traffic with privacy protection.
     """
-    from .models import VisitorLog
     from django.db.models import Count
 
     total_hits = VisitorLog.objects.count()
@@ -353,10 +535,19 @@ def get_analytics_stats(request):
     os_counts = dict(VisitorLog.objects.values('os').annotate(count=Count('id')).values_list('os', 'count'))
     browser_counts = dict(VisitorLog.objects.values('browser').annotate(count=Count('id')).values_list('browser', 'count'))
     language_counts = dict(VisitorLog.objects.values('language').annotate(count=Count('id')).values_list('language', 'count'))
+    country_counts = dict(VisitorLog.objects.exclude(country__isnull=True).values('country').annotate(count=Count('id')).order_by('-count')[:8].values_list('country', 'count'))
+    city_counts = dict(VisitorLog.objects.exclude(city__isnull=True).values('city').annotate(count=Count('id')).order_by('-count')[:8].values_list('city', 'count'))
 
-    recent_logs = VisitorLog.objects.order_by('-created_at')[:10].values(
-        'id', 'device_type', 'os', 'browser', 'language', 'screen_resolution', 'ip_address', 'country', 'created_at'
-    )
+    # Anonymize IP in public recent visit logs
+    recent_logs = list(VisitorLog.objects.order_by('-created_at')[:10].values(
+        'id', 'device_type', 'os', 'browser', 'language', 'screen_resolution',
+        'ip_address', 'country', 'country_code', 'region', 'city', 'latitude', 'longitude', 'isp', 'created_at'
+    ))
+
+    # Mask IPs unless the user is an authenticated staff member
+    if not (request.user and request.user.is_authenticated and request.user.is_staff):
+        for entry in recent_logs:
+            entry['ip_address'] = mask_ip(entry.get('ip_address'))
 
     return Response({
         "total_hits": total_hits,
@@ -365,7 +556,9 @@ def get_analytics_stats(request):
         "os_breakdown": os_counts,
         "browser_breakdown": browser_counts,
         "language_breakdown": language_counts,
-        "recent_visits": list(recent_logs)
+        "country_breakdown": country_counts,
+        "city_breakdown": city_counts,
+        "recent_visits": recent_logs
     })
 
 

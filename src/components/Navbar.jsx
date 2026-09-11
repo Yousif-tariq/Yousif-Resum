@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Globe, Menu, X, Radio, Layers, Cpu, Code2, Send, Sun, Moon, Sparkles, Activity } from 'lucide-react';
+import { Terminal, Globe, Menu, X, Radio, Layers, Cpu, Code2, Send, Sun, Moon, Sparkles, Activity, Volume2, VolumeX } from 'lucide-react';
 
-export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgress, activeRealm }) {
+export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgress, activeRealm, isAudioPlaying, toggleAudio }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -53,13 +53,16 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
           left: 0,
           right: 0,
           zIndex: 80,
-          padding: '0.7rem 1.25rem',
+          padding: '0.65rem 1rem',
+          paddingTop: 'max(0.65rem, var(--sat))',
+          paddingLeft: 'max(1rem, var(--sal))',
+          paddingRight: 'max(1rem, var(--sar))',
           background: isScrolled
-            ? (theme === 'light' ? 'rgba(255, 255, 255, 0.94)' : 'rgba(7, 3, 16, 0.92)')
-            : (theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 3, 16, 0.6)'),
+            ? (theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(7, 3, 16, 0.94)')
+            : (theme === 'light' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(7, 3, 16, 0.65)'),
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: `1px solid ${isScrolled ? 'rgba(168, 85, 247, 0.28)' : 'rgba(168, 85, 247, 0.1)'}`,
+          borderBottom: `1px solid ${isScrolled ? 'rgba(168, 85, 247, 0.3)' : 'rgba(168, 85, 247, 0.12)'}`,
           transition: 'background 0.3s ease, border-color 0.3s ease'
         }}
       >
@@ -68,7 +71,7 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
           {/* Brand / Logo */}
           <div
             onClick={() => scrollToRealm('hero')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flexShrink: 0 }}
           >
             <div
               style={{
@@ -80,16 +83,17 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 0 16px rgba(168, 85, 247, 0.4)',
-                color: '#ffffff'
+                color: '#ffffff',
+                flexShrink: 0
               }}
             >
               <Terminal size={19} strokeWidth={2.5} />
             </div>
             <div>
-              <div className="font-cyber" style={{ fontWeight: 800, fontSize: '0.98rem', letterSpacing: '0.04em', color: 'var(--text-primary)', lineHeight: 1.2 }}>
+              <div className="font-cyber" style={{ fontWeight: 800, fontSize: '0.94rem', letterSpacing: '0.03em', color: 'var(--text-primary)', lineHeight: 1.2 }}>
                 {lang === 'ar' ? 'يوسف طارق' : 'YOUSIF TARIQ'}
               </div>
-              <div className="font-mono" style={{ fontSize: '0.66rem', color: 'var(--neon-purple)', fontWeight: 600 }}>
+              <div className="font-mono" style={{ fontSize: '0.64rem', color: 'var(--neon-purple)', fontWeight: 700 }}>
                 SYS_ARCH // ENG.v26
               </div>
             </div>
@@ -161,28 +165,58 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
             })}
           </div>
 
-          {/* Controls: Theme Switcher + Language Toggle + Mobile Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Controls: Audio + Theme Switcher + Language Toggle + Mobile Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             
+            {/* Audio Toggle Button */}
+            {toggleAudio && (
+              <button
+                onClick={toggleAudio}
+                className="cyber-btn-secondary"
+                style={{
+                  padding: '6px 9px',
+                  fontSize: '0.8rem',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '38px',
+                  minWidth: '38px',
+                  borderColor: isAudioPlaying ? 'var(--neon-purple)' : 'var(--color-border)',
+                  background: isAudioPlaying ? 'rgba(168, 85, 247, 0.15)' : 'var(--color-surface)'
+                }}
+                title={isAudioPlaying ? (lang === 'ar' ? 'كتم الصوت التفاعلي' : 'Mute Ambient Audio') : (lang === 'ar' ? 'تشغيل الصوت التفاعلي' : 'Play Ambient Audio')}
+                aria-label="التحكم بالصوت المحيطي"
+              >
+                {isAudioPlaying ? (
+                  <Volume2 size={16} style={{ color: 'var(--neon-purple)', filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))' }} />
+                ) : (
+                  <VolumeX size={16} style={{ color: 'var(--text-muted)' }} />
+                )}
+              </button>
+            )}
+
             {/* Theme Switcher Button */}
             <button
               onClick={toggleTheme}
               className="cyber-btn-secondary"
               style={{
-                padding: '7px 10px',
+                padding: '6px 9px',
                 fontSize: '0.8rem',
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px',
-                minHeight: '36px'
+                justifyContent: 'center',
+                minHeight: '38px',
+                minWidth: '38px'
               }}
               title={theme === 'dark' ? 'تبديل للمظهر الفاتح' : 'تبديل للمظهر الداكن'}
+              aria-label="تبديل المظهر"
             >
               {theme === 'dark' ? (
-                <Sun size={15} style={{ color: '#f59e0b', filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))' }} />
+                <Sun size={16} style={{ color: '#f59e0b', filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))' }} />
               ) : (
-                <Moon size={15} style={{ color: 'var(--neon-purple)', filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))' }} />
+                <Moon size={16} style={{ color: 'var(--neon-purple)', filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))' }} />
               )}
             </button>
 
@@ -191,18 +225,19 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
               onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
               className="cyber-btn-secondary"
               style={{
-                padding: '7px 12px',
-                fontSize: '0.8rem',
+                padding: '6px 11px',
+                fontSize: '0.82rem',
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                minHeight: '36px'
+                minHeight: '38px'
               }}
               title="تغيير لغة العرض"
+              aria-label="تغيير لغة العرض"
             >
-              <Globe size={14} style={{ color: 'var(--neon-purple)' }} />
-              <span style={{ fontWeight: 700 }}>{lang === 'ar' ? 'EN' : 'عربي'}</span>
+              <Globe size={15} style={{ color: 'var(--neon-purple)' }} />
+              <span style={{ fontWeight: 800 }}>{lang === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
 
             {/* Mobile Menu Toggle Button */}
@@ -211,10 +246,12 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
               className="cyber-btn-secondary"
               style={{
                 display: 'none',
-                padding: '7px',
+                padding: '6px 8px',
                 borderRadius: '10px',
-                minHeight: '36px',
-                minWidth: '36px'
+                minHeight: '38px',
+                minWidth: '38px',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
               id="mobileMenuToggle"
               aria-label="القائمة الرئيسية"
@@ -235,86 +272,98 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
             inset: 0,
             zIndex: 75,
             background: theme === 'light' ? 'rgba(255, 255, 255, 0.98)' : 'rgba(5, 2, 12, 0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '5.2rem 1.25rem 2rem',
-            animation: 'fadeInMenu 0.2s ease-out'
+            paddingTop: 'calc(var(--sat) + 4.5rem)',
+            paddingBottom: 'max(1.5rem, var(--sab))',
+            paddingLeft: 'max(1rem, var(--sal))',
+            paddingRight: 'max(1rem, var(--sar))',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            animation: 'fadeInMenu 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         >
-          {/* Depth Status on Mobile */}
-          <div
-            className="glass-panel"
-            style={{
-              padding: '12px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1rem',
-              borderColor: 'rgba(168, 85, 247, 0.35)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Activity size={16} className="animate-pulse-glow" style={{ color: 'var(--neon-purple)' }} />
-              <span className="font-mono" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                {lang === 'ar' ? 'العمق السيبراني' : 'CYBER MATRIX DEPTH'}
+          <div>
+            {/* Depth Status on Mobile */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '12px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1rem',
+                borderColor: 'rgba(168, 85, 247, 0.35)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={16} className="animate-pulse-glow" style={{ color: 'var(--neon-purple)' }} />
+                <span className="font-mono" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {lang === 'ar' ? 'العمق السيبراني' : 'CYBER MATRIX DEPTH'}
+                </span>
+              </div>
+              <span className="font-mono" style={{ color: 'var(--neon-purple)', fontWeight: 800, fontSize: '0.85rem' }}>
+                {depthMeters} m
               </span>
             </div>
-            <span className="font-mono" style={{ color: 'var(--neon-purple)', fontWeight: 800, fontSize: '0.85rem' }}>
-              {depthMeters} m
-            </span>
-          </div>
 
-          {/* Navigation Realm Buttons */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
-            {realms.map((realm) => {
-              const Icon = realm.icon;
-              const isActive = activeRealm === realm.id;
-              return (
-                <button
-                  key={realm.id}
-                  onClick={() => scrollToRealm(realm.id)}
-                  style={{
-                    background: isActive
-                      ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(244, 63, 94, 0.15))'
-                      : 'rgba(168, 85, 247, 0.06)',
-                    border: `1px solid ${isActive ? 'var(--neon-purple)' : 'rgba(168, 85, 247, 0.15)'}`,
-                    color: isActive ? 'var(--neon-violet-light)' : 'var(--text-primary)',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '1rem',
-                    fontWeight: 700,
-                    textAlign: lang === 'ar' ? 'right' : 'left',
-                    boxShadow: isActive ? '0 0 20px rgba(168, 85, 247, 0.25)' : 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        background: isActive ? 'var(--neon-purple)' : 'rgba(168, 85, 247, 0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isActive ? '#ffffff' : 'var(--neon-purple)'
-                      }}
-                    >
-                      <Icon size={18} />
+            {/* Navigation Realm Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {realms.map((realm) => {
+                const Icon = realm.icon;
+                const isActive = activeRealm === realm.id;
+                return (
+                  <button
+                    key={realm.id}
+                    onClick={() => scrollToRealm(realm.id)}
+                    style={{
+                      background: isActive
+                        ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(244, 63, 94, 0.18))'
+                        : 'rgba(168, 85, 247, 0.06)',
+                      border: `1px solid ${isActive ? 'var(--neon-purple)' : 'rgba(168, 85, 247, 0.15)'}`,
+                      color: isActive ? 'var(--neon-violet-light)' : 'var(--text-primary)',
+                      padding: '14px 16px',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      textAlign: lang === 'ar' ? 'right' : 'left',
+                      boxShadow: isActive ? '0 0 20px rgba(168, 85, 247, 0.25)' : 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer',
+                      minHeight: '48px',
+                      touchAction: 'manipulation'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '10px',
+                          background: isActive ? 'var(--neon-purple)' : 'rgba(168, 85, 247, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: isActive ? '#ffffff' : 'var(--neon-purple)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Icon size={19} />
+                      </div>
+                      <span style={{ fontSize: '0.96rem' }}>{lang === 'ar' ? realm.nameAr : realm.nameEn}</span>
                     </div>
-                    <span>{lang === 'ar' ? realm.nameAr : realm.nameEn}</span>
-                  </div>
 
-                  {isActive && <Sparkles size={16} style={{ color: 'var(--neon-purple)' }} />}
-                </button>
-              );
-            })}
+                    {isActive && <Sparkles size={16} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Bottom Quick Connect Action */}
@@ -322,9 +371,9 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
             <button
               onClick={() => scrollToRealm('contact')}
               className="cyber-btn-primary"
-              style={{ width: '100%', padding: '13px' }}
+              style={{ width: '100%', padding: '14px' }}
             >
-              <Send size={17} />
+              <Send size={18} />
               <span>{lang === 'ar' ? 'إرسال إشارة للمهندس' : 'Transmit Signal'}</span>
             </button>
             <div className="font-mono" style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -336,7 +385,7 @@ export default function Navbar({ lang, setLang, theme, toggleTheme, scrollProgre
 
       <style>{`
         @keyframes fadeInMenu {
-          from { opacity: 0; transform: translateY(-8px); }
+          from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>

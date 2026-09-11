@@ -18,23 +18,23 @@ export default function SkillsRealm({ data, lang }) {
       <div className="max-w-7xl" style={{ width: '100%' }}>
         
         {/* Realm Header */}
-        <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem, 5vw, 3.5rem)' }}>
-          <div className="cyber-badge" style={{ marginBottom: '0.85rem' }}>
-            <Cpu size={15} />
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 4vw, 3rem)' }}>
+          <div className="cyber-badge" style={{ marginBottom: '0.75rem' }}>
+            <Cpu size={14} />
             <span>REALM 02 // ARCHITECTURE MATRIX</span>
           </div>
           <h2
             className="font-cyber text-glow-purple"
             style={{
-              fontSize: 'clamp(1.9rem, 4.5vw, 3.2rem)',
+              fontSize: 'clamp(1.75rem, 4.2vw, 3rem)',
               fontWeight: 800,
-              marginBottom: '0.75rem',
+              marginBottom: '0.65rem',
               color: 'var(--text-heading)'
             }}
           >
             {data.title}
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', maxWidth: '38rem', margin: '0 auto', lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.9rem, 1.8vw, 1.1rem)', maxWidth: '38rem', margin: '0 auto', lineHeight: 1.65 }}>
             {data.subtitle}
           </p>
         </div>
@@ -44,7 +44,7 @@ export default function SkillsRealm({ data, lang }) {
           style={{
             display: 'flex',
             justifyContent: 'center',
-            marginBottom: '2.5rem',
+            marginBottom: '2rem',
             width: '100%'
           }}
         >
@@ -52,14 +52,15 @@ export default function SkillsRealm({ data, lang }) {
             className="no-scrollbar"
             style={{
               display: 'flex',
-              gap: '8px',
+              gap: '6px',
               overflowX: 'auto',
               padding: '6px',
               borderRadius: '16px',
-              background: 'rgba(168, 85, 247, 0.06)',
-              border: '1px solid rgba(168, 85, 247, 0.15)',
+              background: 'rgba(168, 85, 247, 0.08)',
+              border: '1px solid rgba(168, 85, 247, 0.2)',
               maxWidth: '100%',
-              WebkitOverflowScrolling: 'touch'
+              WebkitOverflowScrolling: 'touch',
+              scrollSnapType: 'x mandatory'
             }}
           >
             {data.categories.map((cat) => {
@@ -72,8 +73,8 @@ export default function SkillsRealm({ data, lang }) {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 18px',
+                    gap: '7px',
+                    padding: '9px 16px',
                     borderRadius: '12px',
                     background: isActive
                       ? 'linear-gradient(135deg, var(--neon-purple), var(--neon-magenta))'
@@ -81,15 +82,18 @@ export default function SkillsRealm({ data, lang }) {
                     border: 'none',
                     color: isActive ? '#ffffff' : 'var(--text-secondary)',
                     fontWeight: 700,
-                    fontSize: 'clamp(0.82rem, 1.8vw, 0.92rem)',
+                    fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
                     cursor: 'pointer',
-                    boxShadow: isActive ? '0 0 25px rgba(168, 85, 247, 0.5)' : 'none',
+                    boxShadow: isActive ? '0 0 20px rgba(168, 85, 247, 0.45)' : 'none',
                     transition: 'all 0.25s ease',
                     whiteSpace: 'nowrap',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    scrollSnapAlign: 'start',
+                    minHeight: '42px',
+                    touchAction: 'manipulation'
                   }}
                 >
-                  <Icon size={16} style={{ color: isActive ? '#ffffff' : 'var(--neon-purple)', flexShrink: 0 }} />
+                  <Icon size={15} style={{ color: isActive ? '#ffffff' : 'var(--neon-purple)', flexShrink: 0 }} />
                   <span>{cat.name}</span>
                 </button>
               );
@@ -101,8 +105,8 @@ export default function SkillsRealm({ data, lang }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 290px), 1fr))',
-            gap: 'clamp(1rem, 2.5vw, 1.5rem)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+            gap: 'clamp(0.85rem, 2vw, 1.35rem)',
             maxWidth: '72rem',
             margin: '0 auto',
             width: '100%'
@@ -113,7 +117,7 @@ export default function SkillsRealm({ data, lang }) {
               key={idx}
               className="glass-panel"
               style={{
-                padding: 'clamp(1.25rem, 3vw, 1.75rem)',
+                padding: 'clamp(1.1rem, 2.8vw, 1.6rem)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -122,11 +126,11 @@ export default function SkillsRealm({ data, lang }) {
               }}
             >
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                  <span className="font-cyber" style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span className="font-cyber" style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
                     {skill.name}
                   </span>
-                  <span className="font-mono" style={{ color: 'var(--neon-purple)', fontWeight: 800, fontSize: '0.95rem' }}>
+                  <span className="font-mono" style={{ color: 'var(--neon-purple)', fontWeight: 800, fontSize: '0.9rem' }}>
                     {skill.level}%
                   </span>
                 </div>
@@ -134,12 +138,12 @@ export default function SkillsRealm({ data, lang }) {
                 {/* Cyber Progress Bar */}
                 <div
                   style={{
-                    height: '8px',
+                    height: '7px',
                     width: '100%',
-                    background: 'rgba(168, 85, 247, 0.12)',
+                    background: 'rgba(168, 85, 247, 0.14)',
                     borderRadius: '999px',
                     overflow: 'hidden',
-                    marginBottom: '1rem',
+                    marginBottom: '0.85rem',
                     position: 'relative'
                   }}
                 >
@@ -149,20 +153,15 @@ export default function SkillsRealm({ data, lang }) {
                       width: `${skill.level}%`,
                       background: 'linear-gradient(90deg, var(--neon-purple), var(--neon-magenta))',
                       borderRadius: '999px',
-                      boxShadow: '0 0 12px rgba(168, 85, 247, 0.65)',
-                      transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
+                      boxShadow: '0 0 10px rgba(168, 85, 247, 0.65)',
+                      transition: 'width 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
                   />
                 </div>
 
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   {skill.desc}
                 </p>
-              </div>
-
-              <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--neon-purple)', opacity: 0.9 }}>
-                <CheckCircle2 size={14} style={{ color: 'var(--neon-purple)', flexShrink: 0 }} />
-                <span className="font-mono">{lang === 'ar' ? 'معتمد في بيئات الإنتاج الفعلية' : 'Production Grade Verified'}</span>
               </div>
             </div>
           ))}

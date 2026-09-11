@@ -40,17 +40,24 @@ export default function App() {
     localStorage.setItem('preferred_lang', lang);
   }, [lang]);
 
-  // Seamless Background Audio Autoplay (No UI buttons, runs on open or first interaction)
+  const [isAudioPlaying, setIsAudioPlaying] = useState(() => {
+    return localStorage.getItem('quantum_audio') !== 'muted';
+  });
+  const audioRef = React.useRef(null);
+
+  // Seamless Background Audio Management with User Toggle
   useEffect(() => {
     const audio = new Audio('/audio/run_mus.mp3');
     audio.loop = true;
     audio.volume = 0.65;
+    audioRef.current = audio;
 
     let isStarted = false;
     const startAudio = () => {
-      if (isStarted) return;
+      if (isStarted || localStorage.getItem('quantum_audio') === 'muted') return;
       audio.play().then(() => {
         isStarted = true;
+        setIsAudioPlaying(true);
         cleanupListeners();
       }).catch(() => {
         // Autoplay policy prevented immediate playback; waiting for first user interaction
@@ -69,21 +76,36 @@ export default function App() {
       window.removeEventListener('keydown', handleUserGesture);
     };
 
-    // 1. Try immediate playback on app launch
-    startAudio();
-
-    // 2. Fallback on first gesture if blocked by browser policy
-    window.addEventListener('click', handleUserGesture, { passive: true });
-    window.addEventListener('touchstart', handleUserGesture, { passive: true });
-    window.addEventListener('pointerdown', handleUserGesture, { passive: true });
-    window.addEventListener('scroll', handleUserGesture, { passive: true });
-    window.addEventListener('keydown', handleUserGesture, { passive: true });
+    if (localStorage.getItem('quantum_audio') !== 'muted') {
+      startAudio();
+      window.addEventListener('click', handleUserGesture, { passive: true });
+      window.addEventListener('touchstart', handleUserGesture, { passive: true });
+      window.addEventListener('pointerdown', handleUserGesture, { passive: true });
+      window.addEventListener('scroll', handleUserGesture, { passive: true });
+      window.addEventListener('keydown', handleUserGesture, { passive: true });
+    } else {
+      setIsAudioPlaying(false);
+    }
 
     return () => {
       cleanupListeners();
       audio.pause();
     };
   }, []);
+
+  const toggleAudio = () => {
+    if (!audioRef.current) return;
+    if (isAudioPlaying) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+      localStorage.setItem('quantum_audio', 'muted');
+    } else {
+      audioRef.current.play().then(() => {
+        setIsAudioPlaying(true);
+        localStorage.setItem('quantum_audio', 'playing');
+      }).catch(() => {});
+    }
+  };
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -226,6 +248,8 @@ export default function App() {
         toggleTheme={toggleTheme}
         scrollProgress={scrollProgress}
         activeRealm={activeRealm}
+        isAudioPlaying={isAudioPlaying}
+        toggleAudio={toggleAudio}
       />
 
       {/* 4. Main Multi-Dimensional Content Realms */}

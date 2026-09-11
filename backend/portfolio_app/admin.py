@@ -142,15 +142,95 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(VisitorLog)
 class VisitorLogAdmin(admin.ModelAdmin):
-    list_display = ['device_badge', 'ip_address', 'browser', 'os', 'language', 'screen_resolution', 'country', 'created_at']
-    list_filter = ['device_type', 'os', 'browser', 'language', 'created_at']
-    search_fields = ['ip_address', 'device_id', 'user_agent', 'referrer']
+    list_display = ['location_badge', 'device_badge', 'ip_address', 'isp_badge', 'browser', 'os', 'path_visited', 'created_at']
+    list_filter = ['country', 'city', 'device_type', 'os', 'browser', 'language', 'created_at']
+    search_fields = ['ip_address', 'city', 'country', 'region', 'isp', 'device_id', 'user_agent']
     readonly_fields = [
         'ip_address', 'device_id', 'device_type', 'browser', 'os',
         'language', 'screen_resolution', 'referrer', 'path_visited',
-        'country', 'city', 'user_agent', 'created_at'
+        'location_badge_large', 'map_link', 'country', 'country_code', 'region', 'city',
+        'latitude', 'longitude', 'timezone', 'isp', 'user_agent', 'created_at'
     ]
     date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('الموقع الجغرافي الدقيق والإحداثيات (Geo-Location)', {
+            'description': 'بيانات التحديد الجغرافي والإحداثيات اللحظية المستخرجة للزائر.',
+            'fields': (
+                ('location_badge_large', 'map_link'),
+                ('city', 'region'),
+                ('country', 'country_code'),
+                ('latitude', 'longitude'),
+                ('timezone', 'isp')
+            )
+        }),
+        ('بيانات الجهاز والمتصفح (Device & Client Fingerprint)', {
+            'fields': (
+                ('device_type', 'browser', 'os'),
+                ('language', 'screen_resolution'),
+                ('device_id',)
+            )
+        }),
+        ('بيانات الشبكة والمسار (Network & Route)', {
+            'fields': (
+                ('ip_address', 'path_visited'),
+                ('referrer', 'created_at'),
+                ('user_agent',)
+            )
+        }),
+    )
+
+    def location_badge(self, obj):
+        flag = "📍"
+        if obj.country_code:
+            code = obj.country_code.upper()
+            if code == 'SA': flag = "🇸🇦"
+            elif code == 'AE': flag = "🇦🇪"
+            elif code == 'KW': flag = "🇰🇼"
+            elif code == 'QA': flag = "🇶🇦"
+            elif code == 'BH': flag = "🇧🇭"
+            elif code == 'OM': flag = "🇴🇲"
+            elif code == 'EG': flag = "🇪🇬"
+            elif code == 'JO': flag = "🇯🇴"
+            elif code == 'US': flag = "🇺🇸"
+            elif code == 'GB': flag = "🇬🇧"
+            elif code == 'DE': flag = "🇩🇪"
+            elif code == 'FR': flag = "🇫🇷"
+            elif code == 'TR': flag = "🇹🇷"
+            elif code == 'IN': flag = "🇮🇳"
+
+        city_txt = obj.city or "مدينة غير محددة"
+        country_txt = obj.country or "دولة غير محددة"
+        return format_html(
+            '<span style="font-weight: 700; color: #a855f7; display: inline-flex; align-items: center; gap: 4px;">{} <b>{}</b> <small style="color: #64748b;">({})</small></span>',
+            flag, city_txt, country_txt
+        )
+    location_badge.short_description = "الموقع الدقيق"
+
+    def location_badge_large(self, obj):
+        loc = f"{obj.city or 'Unknown City'}, {obj.region or ''} - {obj.country or 'Unknown Country'}"
+        coords = f"[{obj.latitude or '0.0'}, {obj.longitude or '0.0'}]"
+        return format_html(
+            '<div style="padding: 10px 14px; border-radius: 10px; background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: #a855f7; font-weight: bold; font-size: 0.95rem;">🌍 {} <span style="color: #06b6d4; margin-right: 8px;">{}</span></div>',
+            loc, coords
+        )
+    location_badge_large.short_description = "الموقع المسجل"
+
+    def map_link(self, obj):
+        if obj.latitude is not None and obj.longitude is not None:
+            map_url = f"https://www.google.com/maps?q={obj.latitude},{obj.longitude}"
+            return format_html(
+                '<a href="{}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: #0284c7; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(2,132,199,0.4);">🗺️ عرض الموقع الدقيق على خريطة Google Maps ↗</a>',
+                map_url
+            )
+        return "الإحداثيات غير متوفرة"
+    map_link.short_description = "الخريطة المباشرة"
+
+    def isp_badge(self, obj):
+        if obj.isp:
+            return format_html('<span style="font-size: 0.78rem; color: #0284c7; font-weight: 600;">📡 {}</span>', obj.isp[:35])
+        return "-"
+    isp_badge.short_description = "الشبكة / ISP"
 
     def device_badge(self, obj):
         color_map = {
@@ -173,4 +253,5 @@ class VisitorLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
 
